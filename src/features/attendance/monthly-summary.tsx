@@ -1,52 +1,64 @@
 import { StyleSheet, View } from 'react-native';
 
 import type { MonthlySummary as MonthlySummaryData } from '@/api/types';
-import { Card } from '@/components/card';
+import { Figure } from '@/components/figure';
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { formatDuration } from '@/lib/date';
 
+/** 달의 머리말. 숫자 셋과 합계 한 줄이면 충분하다. */
 export function MonthlySummary({ summary }: { summary: MonthlySummaryData | null }) {
+  const theme = useTheme();
+
   return (
-    <Card style={styles.card}>
-      <View style={styles.row}>
-        <Tile label="근무일" value={summary ? `${summary.workedDays}일` : '-'} />
-        <Tile label="지각" value={summary ? `${summary.lateDays}일` : '-'} />
-        <Tile label="조기퇴근" value={summary ? `${summary.earlyLeaveDays}일` : '-'} />
+    <View style={[styles.block, { backgroundColor: theme.surface }]}>
+      <View style={styles.tiles}>
+        <Tile label="근무일" value={summary?.workedDays} />
+        <Tile label="지각" value={summary?.lateDays} />
+        <Tile label="조퇴" value={summary?.earlyLeaveDays} />
       </View>
-      <ThemedText type="small" themeColor="textSecondary">
-        총 근무시간 {formatDuration(summary?.totalWorkedMinutes ?? null)}
-      </ThemedText>
-    </Card>
+
+      <View style={[styles.total, { borderTopColor: theme.hairline }]}>
+        <ThemedText type="caption" themeColor="inkMuted">
+          총 근무시간
+        </ThemedText>
+        <ThemedText type="data">{formatDuration(summary?.totalWorkedMinutes ?? null)}</ThemedText>
+      </View>
+    </View>
   );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value }: { label: string; value: number | undefined }) {
   return (
     <View style={styles.tile}>
-      <ThemedText type="small" themeColor="textSecondary">
+      <Figure value={value == null ? '—' : String(value)} unit={value == null ? undefined : '일'} />
+      <ThemedText type="caption" themeColor="inkMuted">
         {label}
       </ThemedText>
-      <ThemedText style={styles.tileValue}>{value}</ThemedText>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    padding: Spacing.three,
-    gap: Spacing.two,
+  block: {
+    borderRadius: Radius.md,
+    padding: Spacing.four,
+    gap: Spacing.four,
   },
-  row: {
+  tiles: {
     flexDirection: 'row',
   },
   tile: {
     flex: 1,
-    gap: Spacing.half,
+    gap: 1,
   },
-  tileValue: {
-    fontSize: 22,
-    lineHeight: 28,
-    fontWeight: '700',
+  total: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: Spacing.three,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: Spacing.four,
   },
 });

@@ -1,11 +1,5 @@
 import { useState } from 'react';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { USE_MOCK_API } from '@/api/client';
@@ -13,11 +7,13 @@ import { AppButton } from '@/components/app-button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Spacing } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
+import { useTheme } from '@/hooks/use-theme';
 
 export default function LoginScreen() {
   const { login } = useAuth();
+  const theme = useTheme();
   const [employeeNo, setEmployeeNo] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -25,7 +21,7 @@ export default function LoginScreen() {
 
   const handleSubmit = async () => {
     if (!employeeNo.trim() || !password) {
-      setError('사번과 비밀번호를 입력해 주세요.');
+      setError('사번과 비밀번호를 모두 입력해 주세요.');
       return;
     }
 
@@ -34,7 +30,7 @@ export default function LoginScreen() {
     try {
       await login({ employeeNo, password });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : '로그인에 실패했습니다.');
+      setError(caught instanceof Error ? caught.message : '사번 또는 비밀번호가 맞지 않습니다.');
     } finally {
       setSubmitting(false);
     }
@@ -48,11 +44,12 @@ export default function LoginScreen() {
           style={styles.flex}>
           <ScrollView
             contentContainerStyle={styles.content}
-            keyboardShouldPersistTaps="handled">
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag">
             <View style={styles.header}>
-              <ThemedText type="subtitle">출근체크</ThemedText>
-              <ThemedText type="small" themeColor="textSecondary">
-                사번과 비밀번호로 로그인해 주세요.
+              <ThemedText type="title">출근체크</ThemedText>
+              <ThemedText type="body" themeColor="inkMuted">
+                근무지에 도착하면 한 번, 나갈 때 한 번.
               </ThemedText>
             </View>
 
@@ -61,7 +58,7 @@ export default function LoginScreen() {
                 label="사번"
                 value={employeeNo}
                 onChangeText={setEmployeeNo}
-                placeholder="예) 1001"
+                placeholder="1001"
                 keyboardType="number-pad"
                 autoCapitalize="none"
                 autoComplete="username"
@@ -71,7 +68,7 @@ export default function LoginScreen() {
                 label="비밀번호"
                 value={password}
                 onChangeText={setPassword}
-                placeholder="비밀번호"
+                placeholder="••••"
                 secureTextEntry
                 autoComplete="password"
                 returnKeyType="done"
@@ -79,20 +76,23 @@ export default function LoginScreen() {
               />
 
               {error ? (
-                <ThemedText type="small" themeColor="danger">
-                  {error}
-                </ThemedText>
+                <View style={[styles.error, { backgroundColor: theme.warnSoft }]}>
+                  <ThemedText type="label" themeColor="warn">
+                    {error}
+                  </ThemedText>
+                </View>
               ) : null}
-
-              <AppButton label="로그인" onPress={handleSubmit} loading={submitting} />
             </View>
 
-            {USE_MOCK_API ? (
-              <ThemedText type="small" themeColor="textSecondary" style={styles.hint}>
-                데모 계정 · 사번 1001 / 1002 / 2001, 비밀번호 1234{'\n'}
-                실서버 연동은 .env 의 EXPO_PUBLIC_API_BASE_URL 을 설정하세요.
-              </ThemedText>
-            ) : null}
+            <View style={styles.footer}>
+              <AppButton label="로그인" onPress={handleSubmit} loading={submitting} />
+
+              {USE_MOCK_API ? (
+                <ThemedText type="caption" themeColor="inkMuted" style={styles.hint}>
+                  데모 계정은 사번 1001, 1002, 2001 이고 비밀번호는 모두 1234 입니다.
+                </ThemedText>
+              ) : null}
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -107,13 +107,18 @@ const styles = StyleSheet.create({
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    gap: Spacing.five,
-    padding: Spacing.four,
+    gap: Spacing.six,
+    padding: Spacing.five,
     maxWidth: MaxContentWidth,
     width: '100%',
     alignSelf: 'center',
   },
   header: { gap: Spacing.two },
-  form: { gap: Spacing.three },
-  hint: { textAlign: 'center', lineHeight: 20 },
+  form: { gap: Spacing.four },
+  footer: { gap: Spacing.four },
+  error: {
+    padding: Spacing.four,
+    borderRadius: Radius.sm,
+  },
+  hint: { textAlign: 'center', lineHeight: 18 },
 });

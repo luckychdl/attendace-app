@@ -1,73 +1,80 @@
-import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
+import { StyleSheet, Text, type TextProps } from 'react-native';
 
-import { Fonts, ThemeColor } from '@/constants/theme';
+import { Figures, ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+/** 숫자는 Archivo, 한글은 시스템 서체. 타입이 곧 역할이다. */
+export type TextType =
+  | 'hero'
+  | 'figure'
+  | 'data'
+  | 'dataSmall'
+  | 'title'
+  | 'heading'
+  | 'body'
+  | 'label'
+  | 'caption';
+
 export type ThemedTextProps = TextProps & {
-  type?: 'default' | 'title' | 'small' | 'smallBold' | 'subtitle' | 'link' | 'linkPrimary' | 'code';
+  type?: TextType;
   themeColor?: ThemeColor;
 };
 
-export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
+export function ThemedText({ style, type = 'body', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
 
-  return (
-    <Text
-      style={[
-        { color: theme[themeColor ?? 'text'] },
-        type === 'default' && styles.default,
-        type === 'title' && styles.title,
-        type === 'small' && styles.small,
-        type === 'smallBold' && styles.smallBold,
-        type === 'subtitle' && styles.subtitle,
-        type === 'link' && styles.link,
-        type === 'linkPrimary' && styles.linkPrimary,
-        type === 'code' && styles.code,
-        style,
-      ]}
-      {...rest}
-    />
-  );
+  return <Text style={[styles[type], { color: theme[themeColor ?? 'ink'] }, style]} {...rest} />;
 }
 
 const styles = StyleSheet.create({
-  small: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 500,
+  /** 화면에 하나뿐인 숫자. 크게, 무겁게, 자간을 바짝 조인다. */
+  hero: {
+    fontFamily: Figures.heavy,
+    fontSize: 84,
+    lineHeight: 88,
+    letterSpacing: -4,
   },
-  smallBold: {
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: 700,
+  figure: {
+    fontFamily: Figures.bold,
+    fontSize: 30,
+    lineHeight: 34,
+    letterSpacing: -1,
   },
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: 500,
+  data: {
+    fontFamily: Figures.medium,
+    fontSize: 15,
+    lineHeight: 20,
+  },
+  dataSmall: {
+    fontFamily: Figures.medium,
+    fontSize: 13,
+    lineHeight: 18,
   },
   title: {
-    fontSize: 48,
-    fontWeight: 600,
-    lineHeight: 52,
+    fontSize: 28,
+    lineHeight: 34,
+    fontWeight: '700',
+    letterSpacing: -0.6,
   },
-  subtitle: {
-    fontSize: 32,
-    lineHeight: 44,
-    fontWeight: 600,
+  heading: {
+    fontSize: 17,
+    lineHeight: 23,
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  link: {
-    lineHeight: 30,
-    fontSize: 14,
+  body: {
+    fontSize: 15,
+    lineHeight: 21,
+    fontWeight: '500',
   },
-  linkPrimary: {
-    lineHeight: 30,
-    fontSize: 14,
-    color: '#3c87f7',
+  label: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '600',
   },
-  code: {
-    fontFamily: Fonts.mono,
-    fontWeight: Platform.select({ android: 700 }) ?? 500,
+  caption: {
     fontSize: 12,
+    lineHeight: 16,
+    fontWeight: '600',
   },
 });

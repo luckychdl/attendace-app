@@ -1,48 +1,78 @@
 import { StyleSheet, View } from 'react-native';
 
-import type { AttendanceRecord } from '@/api/types';
-import { StatusBadge } from '@/components/status-badge';
+import type { AttendanceRecord, Worksite } from '@/api/types';
+import { SpanBar } from '@/components/span-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
-import { formatDuration, formatShortDate, formatTime, fromDateKey } from '@/lib/date';
+import { exceptionLabel, STATUS_LABEL, STATUS_TONE } from '@/lib/attendance-rules';
+import { formatDuration, formatTime, fromDateKey, minutesOfDay, weekdayName } from '@/lib/date';
 
-export function RecordRow({ record }: { record: AttendanceRecord }) {
-  const theme = useTheme();
+type RecordRowProps = {
+  record: AttendanceRecord;
+  worksite: Worksite;
+};
+
+/** 하루 한 줄. 숫자로도 읽히고, 막대의 위치만 봐도 지각·조퇴가 보인다. */
+export function RecordRow({ record, worksite }: RecordRowProps) {
+  const day = fromDateKey(record.workDate);
+  const tone = STATUS_TONE[record.status];
+  const exception = exceptionLabel(record.status);
 
   return (
-    <View style={[styles.row, { borderBottomColor: theme.border }]}>
-      <View style={styles.dateColumn}>
-        <ThemedText type="smallBold">{formatShortDate(fromDateKey(record.workDate))}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">
-          {formatTime(record.checkInAt)} ~ {formatTime(record.checkOutAt)}
-        </ThemedText>
+    <View style={styles.row}>
+      <View style={styles.head}>
+        <View style={styles.date}>
+          <ThemedText type="figure" style={styles.dayNumber}>
+            {day.getDate()}
+          </ThemedText>
+          <ThemedText type="caption" themeColor="inkMuted">
+            {weekdayName(day)}
+          </ThemedText>
+        </View>
+
+        <View style={styles.times}>
+          <ThemedText type="data">
+            {formatTime(record.checkInAt)} – {formatTime(record.checkOutAt)}
+          </ThemedText>
+          <ThemedText type="caption" themeColor="inkMuted">
+            {formatDuration(record.workedMinutes)}
+            {exception ? `  ·  ${exception}` : ''}
+          </ThemedText>
+        </View>
       </View>
 
-      <View style={styles.metaColumn}>
-        <StatusBadge status={record.status} />
-        <ThemedText type="small" themeColor="textSecondary">
-          {formatDuration(record.workedMinutes)}
-        </ThemedText>
-      </View>
+      <SpanBar
+        start={minutesOfDay(record.checkInAt)}
+        end={minutesOfDay(record.checkOutAt)}
+        scheduleStart={worksite.startHour * 60 + worksite.startMinute}
+        scheduleEnd={worksite.endHour * 60 + worksite.endMinute}
+        tone={tone}
+        label={`${formatTime(record.checkInAt)}부터 ${formatTime(record.checkOutAt)}까지, ${STATUS_LABEL[record.status]}`}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
+    gap: Spacing.three,
+    paddingVertical: Spacing.three,
+  },
+  head: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.three,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: Spacing.three,
+    gap: Spacing.four,
   },
-  dateColumn: {
-    gap: Spacing.half,
+  date: {
+    width: 34,
+    alignItems: 'center',
   },
-  metaColumn: {
-    alignItems: 'flex-end',
-    gap: Spacing.half,
+  dayNumber: {
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  times: {
+    flex: 1,
+    gap: 1,
   },
 });

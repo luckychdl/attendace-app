@@ -1,29 +1,41 @@
+import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type TextFieldProps = TextInputProps & {
   label: string;
 };
 
-export function TextField({ label, style, ...rest }: TextFieldProps) {
+/** 테두리 대신 면으로 서는 입력칸. 포커스가 가면 강조색 링이 생긴다. */
+export function TextField({ label, style, onFocus, onBlur, ...rest }: TextFieldProps) {
   const theme = useTheme();
+  const [focused, setFocused] = useState(false);
 
   return (
     <View style={styles.wrapper}>
-      <ThemedText type="smallBold" themeColor="textSecondary">
+      <ThemedText type="label" themeColor="inkMuted">
         {label}
       </ThemedText>
       <TextInput
-        placeholderTextColor={theme.textSecondary}
+        accessibilityLabel={label}
+        placeholderTextColor={theme.inkMuted}
+        onFocus={(event) => {
+          setFocused(true);
+          onFocus?.(event);
+        }}
+        onBlur={(event) => {
+          setFocused(false);
+          onBlur?.(event);
+        }}
         style={[
           styles.input,
           {
-            color: theme.text,
-            backgroundColor: theme.backgroundElement,
-            borderColor: theme.border,
+            color: theme.ink,
+            backgroundColor: theme.surface,
+            borderColor: focused ? theme.accent : 'transparent',
           },
           style,
         ]}
@@ -38,10 +50,11 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
   },
   input: {
-    minHeight: 52,
-    borderRadius: Spacing.three,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: Spacing.three,
-    fontSize: 16,
+    minHeight: TouchTarget + Spacing.two,
+    borderRadius: Radius.md,
+    borderWidth: 2,
+    paddingHorizontal: Spacing.four,
+    fontSize: 17,
+    fontWeight: '600',
   },
 });

@@ -1,85 +1,85 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * 디자인 토큰.
+ *
+ * 종이·괘선·도장을 쓰지 않는다. 화면은 문서가 아니라 살아 있는 면이다.
+ * 테두리 대신 여백과 면, 강조는 전기 인디고 한 색으로만 준다.
+ *
+ * 근태 상태색(good/warn/muted)은 라이트·다크를 각각 따로 고른 값이다.
+ * 뒤집어 쓰지 말 것 — 명도 대역과 색각 분리 검사를 모드별로 통과한 조합이다.
  */
 
 import '@/global.css';
 
-import { Platform } from 'react-native';
-
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
-    border: '#E0E1E6',
-    primary: '#2563EB',
-    primaryText: '#ffffff',
-    primaryMuted: '#EAF1FE',
-    success: '#16A34A',
-    successMuted: '#E7F7EE',
-    warning: '#D97706',
-    warningMuted: '#FEF3E2',
-    danger: '#DC2626',
-    dangerMuted: '#FDECEC',
+    canvas: '#EFEFF3',
+    surface: '#FFFFFF',
+    ink: '#121218',
+    inkMuted: '#6E6E7A',
+    hairline: '#E3E3EA',
+    accent: '#4B3BEB',
+    accentSoft: '#E9E7FF',
+    accentOn: '#FFFFFF',
+    good: '#0A8457',
+    goodSoft: '#DDF1E8',
+    warn: '#B96A00',
+    warnSoft: '#FBEEDA',
+    muted: '#8E8E9C',
+    mutedSoft: '#E5E5EC',
+    /** 근무 구간 막대가 놓이는 예정 근무시간 트랙 */
+    track: '#CBCBD9',
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
-    border: '#2E3135',
-    primary: '#5B8DEF',
-    primaryText: '#0B1220',
-    primaryMuted: '#16233C',
-    success: '#4ADE80',
-    successMuted: '#11241A',
-    warning: '#FBBF24',
-    warningMuted: '#2A2010',
-    danger: '#F87171',
-    dangerMuted: '#2B1414',
+    canvas: '#0D0D11',
+    surface: '#18181F',
+    ink: '#F3F3F7',
+    inkMuted: '#8D8D9B',
+    hairline: '#26262F',
+    accent: '#7C6DFF',
+    accentSoft: '#201C3D',
+    accentOn: '#0D0D11',
+    good: '#1EA96A',
+    goodSoft: '#10291E',
+    warn: '#C2870F',
+    warnSoft: '#2C220E',
+    muted: '#7A7A8A',
+    mutedSoft: '#22222B',
+    track: '#343441',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
 
-export const Fonts = Platform.select({
-  ios: {
-    /** iOS `UIFontDescriptorSystemDesignDefault` */
-    sans: 'system-ui',
-    /** iOS `UIFontDescriptorSystemDesignSerif` */
-    serif: 'ui-serif',
-    /** iOS `UIFontDescriptorSystemDesignRounded` */
-    rounded: 'ui-rounded',
-    /** iOS `UIFontDescriptorSystemDesignMonospaced` */
-    mono: 'ui-monospace',
-  },
-  default: {
-    sans: 'normal',
-    serif: 'serif',
-    rounded: 'normal',
-    mono: 'monospace',
-  },
-  web: {
-    sans: 'var(--font-display)',
-    serif: 'var(--font-serif)',
-    rounded: 'var(--font-rounded)',
-    mono: 'var(--font-mono)',
-  },
-});
+/** 근태 상태를 칠하는 색. `${tone}` 과 `${tone}Soft` 가 항상 쌍으로 있다. */
+export type ToneColor = 'accent' | 'good' | 'warn' | 'muted';
 
-export const Spacing = {
-  half: 2,
-  one: 4,
-  two: 8,
-  three: 16,
-  four: 24,
-  five: 32,
-  six: 64,
+/** 숫자 전용 서체. 한글은 시스템 서체를 그대로 쓴다. */
+export const Figures = {
+  medium: 'Archivo_500Medium',
+  bold: 'Archivo_700Bold',
+  heavy: 'Archivo_800ExtraBold',
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
-export const MaxContentWidth = 800;
+export const Spacing = {
+  one: 4,
+  two: 8,
+  three: 12,
+  four: 16,
+  five: 24,
+  six: 32,
+  seven: 48,
+} as const;
+
+/** 모서리는 넉넉하게. 작은 칩일수록 덜 둥글다. */
+export const Radius = {
+  xs: 8,
+  sm: 12,
+  md: 18,
+  lg: 28,
+  pill: 999,
+} as const;
+
+/** 터치 가능한 요소의 최소 한 변 길이(pt) */
+export const TouchTarget = 44;
+
+export const MaxContentWidth = 520;

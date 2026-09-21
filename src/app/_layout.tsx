@@ -1,23 +1,54 @@
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
+import { Archivo_500Medium } from '@expo-google-fonts/archivo/500Medium';
+import { Archivo_700Bold } from '@expo-google-fonts/archivo/700Bold';
+import { Archivo_800ExtraBold } from '@expo-google-fonts/archivo/800ExtraBold';
+import { useFonts } from 'expo-font';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider, type Theme } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { useColorScheme } from 'react-native';
+import { useEffect, useMemo } from 'react';
 
+import { Colors } from '@/constants/theme';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { WorksiteProvider } from '@/hooks/use-worksite';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const scheme = useColorScheme();
+  const isDark = scheme === 'dark';
+
+  // 숫자 전용 서체. 한글은 시스템 서체를 그대로 쓴다.
+  const [fontsLoaded, fontError] = useFonts({
+    Archivo_500Medium,
+    Archivo_700Bold,
+    Archivo_800ExtraBold,
+  });
+
+  // 내비게이션이 칠하는 배경까지 앱 토큰을 쓰게 해서 화면 전환 시 흰 배경이 번쩍이지 않게 한다.
+  const navigationTheme = useMemo<Theme>(() => {
+    const base = isDark ? DarkTheme : DefaultTheme;
+    const palette = isDark ? Colors.dark : Colors.light;
+
+    return {
+      ...base,
+      colors: {
+        ...base.colors,
+        primary: palette.accent,
+        background: palette.canvas,
+        card: palette.surface,
+        text: palette.ink,
+        border: palette.hairline,
+      },
+    };
+  }, [isDark]);
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style="auto" />
+    <ThemeProvider value={navigationTheme}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <AuthProvider>
         <WorksiteProvider>
-          <RootNavigator />
+          <RootNavigator fontsReady={fontsLoaded || !!fontError} />
         </WorksiteProvider>
       </AuthProvider>
     </ThemeProvider>
@@ -29,18 +60,19 @@ export default function RootLayout() {
  * Stack.Protected 가 guard 조건에 맞는 화면만 라우터에 노출하므로
  * 화면 쪽에서 별도의 리다이렉트 처리가 필요 없다.
  */
-function RootNavigator() {
+function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
   const { status } = useAuth();
   const isAuthenticated = status === 'authenticated';
+  const ready = fontsReady && status !== 'loading';
 
   useEffect(() => {
-    if (status !== 'loading') {
+    if (ready) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [status]);
+  }, [ready]);
 
-  // 세션 복구 중에는 스플래시를 유지한다.
-  if (status === 'loading') return null;
+  // 세션 복구와 서체 로딩이 끝날 때까지 스플래시를 유지한다.
+  if (!ready) return null;
 
   return (
     <Stack screenOptions={{ headerShown: false }}>

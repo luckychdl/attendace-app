@@ -1,4 +1,5 @@
 import type { AttendanceRecord, AttendanceStatus, Worksite } from '@/api/types';
+import type { ToneColor } from '@/constants/theme';
 import { atTime, fromDateKey, minutesBetween } from '@/lib/date';
 
 /** 지각/조기퇴근 판정 시 허용하는 여유 시간(분) */
@@ -29,6 +30,7 @@ export function resolveStatus(
   return 'normal';
 }
 
+/** 문장 안에서 상태를 부를 때 쓰는 이름 */
 export const STATUS_LABEL: Record<AttendanceStatus, string> = {
   working: '근무중',
   normal: '정상',
@@ -38,12 +40,17 @@ export const STATUS_LABEL: Record<AttendanceStatus, string> = {
   missingCheckOut: '퇴근 미체크',
 };
 
-/** 상태별 배지 색상 톤. theme.ts 의 Colors 키를 가리킨다. */
-export const STATUS_TONE: Record<AttendanceStatus, 'primary' | 'success' | 'warning' | 'danger'> = {
-  working: 'primary',
-  normal: 'success',
-  late: 'warning',
-  earlyLeave: 'warning',
-  lateAndEarlyLeave: 'danger',
-  missingCheckOut: 'danger',
+/** 진행 중은 강조색, 제대로 채운 날은 good, 어긋난 날은 warn, 기록이 빈 날은 muted. */
+export const STATUS_TONE: Record<AttendanceStatus, ToneColor> = {
+  working: 'accent',
+  normal: 'good',
+  late: 'warn',
+  earlyLeave: 'warn',
+  lateAndEarlyLeave: 'warn',
+  missingCheckOut: 'muted',
 };
+
+/** 정상인 날은 굳이 이름을 붙이지 않는다. 어긋난 날만 글자로 짚어 준다. */
+export function exceptionLabel(status: AttendanceStatus) {
+  return status === 'normal' || status === 'working' ? null : STATUS_LABEL[status];
+}

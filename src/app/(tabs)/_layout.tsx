@@ -3,6 +3,12 @@ import { Tabs } from 'expo-router/js-tabs';
 
 import { useTheme } from '@/hooks/use-theme';
 
+const TABS = [
+  { name: 'index', title: '오늘', icon: 'today' },
+  { name: 'history', title: '기록', icon: 'stats-chart' },
+  { name: 'settings', title: '설정', icon: 'person' },
+] as const;
+
 export default function TabsLayout() {
   const theme = useTheme();
 
@@ -10,37 +16,33 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: theme.primary,
-        tabBarInactiveTintColor: theme.textSecondary,
-        tabBarStyle: { backgroundColor: theme.background, borderTopColor: theme.border },
+        tabBarActiveTintColor: theme.accent,
+        tabBarInactiveTintColor: theme.inkMuted,
+        tabBarStyle: {
+          backgroundColor: theme.canvas,
+          borderTopColor: theme.hairline,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
+        },
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: '출근체크',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="time-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="history"
-        options={{
-          title: '근태기록',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="calendar-outline" size={size} color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: '내정보',
-          tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
-          ),
-        }}
-      />
+      {TABS.map((tab) => (
+        <Tabs.Screen
+          key={tab.name}
+          name={tab.name}
+          options={{
+            title: tab.title,
+            tabBarIcon: ({ color, size, focused }) => (
+              <Ionicons
+                name={focused ? tab.icon : `${tab.icon}-outline`}
+                size={size}
+                color={color}
+              />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

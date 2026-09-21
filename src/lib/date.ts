@@ -21,26 +21,21 @@ export function fromDateKey(dateKey: string) {
   return new Date(year, month - 1, day);
 }
 
+/** 월 */
+export function weekdayName(date: Date) {
+  return WEEKDAYS[date.getDay()];
+}
+
 /** 2026년 9월 21일 (월) */
 export function formatFullDate(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
 }
 
-/** 9월 21일 (월) */
-export function formatShortDate(date: Date) {
-  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
-}
-
-/** 09:04 */
+/** 09:04 — 기록이 없으면 대시 하나 */
 export function formatTime(value: Date | string | null | undefined) {
-  if (!value) return '--:--';
+  if (!value) return '—';
   const date = typeof value === 'string' ? new Date(value) : value;
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-/** 09:04:22 */
-export function formatClock(date: Date) {
-  return `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 /** 8시간 32분 */
@@ -52,6 +47,13 @@ export function formatDuration(minutes: number | null | undefined) {
   if (hours === 0) return `${mins}분`;
   if (mins === 0) return `${hours}시간`;
   return `${hours}시간 ${mins}분`;
+}
+
+/** 자정부터 몇 분이 지났는지. 하루를 가로축에 얹을 때 쓴다. */
+export function minutesOfDay(value: Date | string | null | undefined) {
+  if (!value) return null;
+  const date = typeof value === 'string' ? new Date(value) : value;
+  return date.getHours() * 60 + date.getMinutes();
 }
 
 export function minutesBetween(from: Date | string, to: Date | string) {
@@ -80,10 +82,4 @@ export function monthRange(monthKey: string) {
 export function shiftMonth(monthKey: string, offset: number) {
   const [year, month] = monthKey.split('-').map(Number);
   return toMonthKey(new Date(year, month - 1 + offset, 1));
-}
-
-/** 2026년 9월 */
-export function formatMonth(monthKey: string) {
-  const [year, month] = monthKey.split('-').map(Number);
-  return `${year}년 ${month}월`;
 }

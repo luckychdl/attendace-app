@@ -1,13 +1,13 @@
 import { ActivityIndicator, Pressable, StyleSheet, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type AppButtonProps = {
   label: string;
   onPress: () => void;
-  variant?: 'primary' | 'secondary' | 'danger';
+  variant?: 'solid' | 'soft' | 'ghost';
   disabled?: boolean;
   loading?: boolean;
   style?: ViewStyle;
@@ -16,39 +16,38 @@ type AppButtonProps = {
 export function AppButton({
   label,
   onPress,
-  variant = 'primary',
+  variant = 'solid',
   disabled,
   loading,
   style,
 }: AppButtonProps) {
   const theme = useTheme();
+  const isBlocked = disabled || loading;
 
   const background =
-    variant === 'primary'
-      ? theme.primary
-      : variant === 'danger'
-        ? theme.dangerMuted
-        : theme.backgroundSelected;
-  const textColor =
-    variant === 'primary' ? theme.primaryText : variant === 'danger' ? theme.danger : theme.text;
-
-  const isBlocked = disabled || loading;
+    variant === 'solid' ? theme.accent : variant === 'soft' ? theme.surface : 'transparent';
+  const textColor = variant === 'solid' ? theme.accentOn : theme.ink;
 
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={label}
       accessibilityState={{ disabled: !!isBlocked, busy: !!loading }}
       disabled={isBlocked}
       onPress={onPress}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: background, opacity: isBlocked ? 0.5 : pressed ? 0.8 : 1 },
+        {
+          backgroundColor: background,
+          opacity: isBlocked ? 0.4 : 1,
+          transform: [{ scale: pressed && !isBlocked ? 0.97 : 1 }],
+        },
         style,
       ]}>
       {loading ? (
         <ActivityIndicator color={textColor} />
       ) : (
-        <ThemedText type="default" style={[styles.label, { color: textColor }]}>
+        <ThemedText type="heading" style={{ color: textColor }}>
           {label}
         </ThemedText>
       )}
@@ -58,13 +57,11 @@ export function AppButton({
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 52,
-    borderRadius: Spacing.three,
+    minHeight: TouchTarget + Spacing.two,
+    borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: Spacing.four,
-  },
-  label: {
-    fontWeight: '700',
+    paddingHorizontal: Spacing.five,
+    paddingVertical: Spacing.three,
   },
 });
