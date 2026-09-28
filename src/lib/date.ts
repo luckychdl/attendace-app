@@ -31,6 +31,11 @@ export function formatFullDate(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
 }
 
+/** 9월 30일 (수) */
+export function formatMonthDay(date: Date) {
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${WEEKDAYS[date.getDay()]})`;
+}
+
 /** 09:04 — 기록이 없으면 대시 하나 */
 export function formatTime(value: Date | string | null | undefined) {
   if (!value) return '—';
@@ -47,6 +52,17 @@ export function formatDuration(minutes: number | null | undefined) {
   if (hours === 0) return `${mins}분`;
   if (mins === 0) return `${hours}시간`;
   return `${hours}시간 ${mins}분`;
+}
+
+/** 자정 기준 분 → 14:00 */
+export function formatClock(minutes: number) {
+  return `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}`;
+}
+
+/** 14:00 → 자정 기준 분 */
+export function parseClock(value: string) {
+  const [hours, minutes] = value.split(':').map(Number);
+  return hours * 60 + minutes;
 }
 
 /** 자정부터 몇 분이 지났는지. 하루를 가로축에 얹을 때 쓴다. */

@@ -2,6 +2,7 @@ import { USE_MOCK_API, request } from '@/api/client';
 import type { AttendanceRecord, CheckInput, MonthlySummary, Worksite } from '@/api/types';
 import { resolveStatus } from '@/lib/attendance-rules';
 import { minutesBetween, monthRange, toDateKey } from '@/lib/date';
+import { approvedLeavesOn } from '@/lib/leave-rules';
 import { localStore } from '@/storage/local-store';
 
 export class AttendanceError extends Error {}
@@ -14,6 +15,11 @@ async function mockFindTodayRecord(employeeId: string) {
   const today = toDateKey(new Date());
   const records = await localStore.getRecords();
   return records.find((item) => item.employeeId === employeeId && item.workDate === today) ?? null;
+}
+
+/** 오늘 승인된 반차·시차가 있으면 판정 기준 시각이 달라진다. */
+async function mockTodayLeaves(employeeId: string) {
+  return approvedLeavesOn((await localStore.getLeaves()) ?? [], employeeId, toDateKey(new Date()));
 }
 
 export const attendanceApi = {
@@ -82,7 +88,7 @@ export const attendanceApi = {
       checkInLocation: input.location,
       checkOutLocation: null,
       workedMinutes: null,
-      status: resolveStatus(base, worksite),
+      status: resolveStatus(base, worksite, await mockTodayLeaves(input.employeeId)),
       note: input.note ?? null,
     });
   },
@@ -111,7 +117,7 @@ export const attendanceApi = {
 
     return localStore.upsertRecord({
       ...updated,
-      status: resolveStatus(updated, worksite),
+      status: resolveStatus(updated, worksite, await mockTodayLeaves(input.employeeId)),
     });
   },
 };

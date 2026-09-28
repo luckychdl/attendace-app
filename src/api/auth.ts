@@ -1,6 +1,6 @@
 import { ApiError, USE_MOCK_API, request, setAuthToken } from '@/api/client';
 import { MOCK_EMPLOYEES } from '@/api/mock/employees';
-import { seedRecordsIfEmpty } from '@/api/mock/seed';
+import { seedLeavesIfEmpty, seedRecordsIfEmpty } from '@/api/mock/seed';
 import type { Session } from '@/api/types';
 import { localStore } from '@/storage/local-store';
 
@@ -33,6 +33,7 @@ export const authApi = {
     setAuthToken(session.token);
     await localStore.setSession(session);
     await seedRecordsIfEmpty(employee.id, await localStore.getWorksite());
+    await seedLeavesIfEmpty();
 
     return session;
   },
@@ -41,6 +42,18 @@ export const authApi = {
   async restore(): Promise<Session | null> {
     const session = await localStore.getSession();
     setAuthToken(session?.token ?? null);
+
+    if (session && USE_MOCK_API) {
+      // 목 인사 정보가 바뀌었을 수 있으니 (예: role 추가) 저장된 세션을 최신으로 맞춘다.
+      const found = MOCK_EMPLOYEES.find((item) => item.id === session.employee.id);
+      if (found) {
+        const { password: _password, ...employee } = found;
+        const refreshed = { ...session, employee };
+        await localStore.setSession(refreshed);
+        await seedLeavesIfEmpty();
+        return refreshed;
+      }
+    }
     return session;
   },
 

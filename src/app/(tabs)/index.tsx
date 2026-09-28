@@ -2,7 +2,9 @@ import { useCallback, useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import type { LeaveRequest, Worksite } from '@/api/types';
 import { HoldButton } from '@/components/hold-button';
+import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
@@ -10,10 +12,12 @@ import { PlacePill } from '@/features/attendance/place-pill';
 import { TodayPanel } from '@/features/attendance/today-panel';
 import { useNow, useTodayAttendance } from '@/hooks/use-attendance';
 import { useEmployee } from '@/hooks/use-auth';
+import { useApprovedLeaves } from '@/hooks/use-leave';
 import { useCurrentLocation } from '@/hooks/use-location';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
-import { formatFullDate, weekdayName } from '@/lib/date';
+import { formatClock, formatFullDate, toDateKey, weekdayName } from '@/lib/date';
+import { approvedLeavesOn, describeLeave, scheduleMinutes } from '@/lib/leave-rules';
 
 export default function CheckInScreen() {
   const employee = useEmployee();
@@ -23,6 +27,10 @@ export default function CheckInScreen() {
   const location = useCurrentLocation(worksite);
   const { record, loading, submitting, error, submit, reload, checkedIn, checkedOut } =
     useTodayAttendance(employee.id, worksite);
+
+  const todayKey = toDateKey(now);
+  const { leaves } = useApprovedLeaves(employee.id, todayKey, todayKey);
+  const todayLeaves = approvedLeavesOn(leaves, employee.id, todayKey);
 
   // 첫 진입의 로딩까지 당겨서 새로고침으로 보여주지 않도록 분리한다.
   const [refreshing, setRefreshing] = useState(false);
@@ -87,11 +95,21 @@ export default function CheckInScreen() {
           }>
           <PlacePill worksite={worksite} location={location} onRefresh={location.refresh} />
 
+          {todayLeaves.length > 0 ? (
+            <StatusPill tone="accent" label={leaveNotice(todayLeaves, worksite)} />
+          ) : null}
+
           <View style={styles.stage}>
             <ThemedText type="label" themeColor="inkMuted">
               {now.getMonth() + 1}월 {now.getDate()}일 {weekdayName(now)}요일
             </ThemedText>
-            <TodayPanel record={record} now={now} worksite={worksite} checkedOut={checkedOut} />
+            <TodayPanel
+              record={record}
+              now={now}
+              worksite={worksite}
+              checkedOut={checkedOut}
+              leaves={todayLeaves}
+            />
           </View>
 
           {error ? (
@@ -138,6 +156,14 @@ export default function CheckInScreen() {
       </SafeAreaView>
     </ThemedView>
   );
+}
+
+/** 오늘 쓰는 휴가와, 그래서 몇 시부터 몇 시까지 일하면 되는지 한 줄로 */
+function leaveNotice(leaves: LeaveRequest[], worksite: Worksite) {
+  const schedule = scheduleMinutes(worksite, leaves);
+  if (!schedule) return '오늘은 쉬는 날입니다';
+  const names = leaves.map(describeLeave).join(' · ');
+  return `${names} · ${formatClock(schedule.start)}–${formatClock(schedule.end)} 근무`;
 }
 
 const styles = StyleSheet.create({

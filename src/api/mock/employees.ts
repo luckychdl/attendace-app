@@ -8,6 +8,7 @@ export const MOCK_EMPLOYEES: (Employee & { password: string })[] = [
     name: '김민준',
     department: '개발팀',
     position: '팀장',
+    role: 'manager',
     password: '1234',
   },
   {
@@ -16,6 +17,7 @@ export const MOCK_EMPLOYEES: (Employee & { password: string })[] = [
     name: '이서연',
     department: '개발팀',
     position: '사원',
+    role: 'member',
     password: '1234',
   },
   {
@@ -24,6 +26,7 @@ export const MOCK_EMPLOYEES: (Employee & { password: string })[] = [
     name: '박지호',
     department: '영업팀',
     position: '대리',
+    role: 'member',
     password: '1234',
   },
 ];

@@ -1,25 +1,28 @@
 import { StyleSheet, View } from 'react-native';
 
-import type { AttendanceRecord, Worksite } from '@/api/types';
+import type { AttendanceRecord, LeaveRequest, Worksite } from '@/api/types';
 import { SpanBar } from '@/components/span-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { STATUS_TONE } from '@/lib/attendance-rules';
-import { formatTime, minutesBetween, minutesOfDay } from '@/lib/date';
+import { formatClock, formatTime, minutesBetween, minutesOfDay } from '@/lib/date';
+import { scheduleMinutes } from '@/lib/leave-rules';
 
 type TodayPanelProps = {
   record: AttendanceRecord | null;
   now: Date;
   worksite: Worksite;
   checkedOut: boolean;
+  /** 오늘 승인된 반차·시차. 예정 근무시간 눈금이 그만큼 줄어든다. */
+  leaves?: readonly LeaveRequest[];
 };
 
 /**
  * 오늘 하루를 숫자 하나로 요약한다.
  * 출근 전에는 지금 시각이, 근무 중에는 흘러가는 근무 시간이 주인공이다.
  */
-export function TodayPanel({ record, now, worksite, checkedOut }: TodayPanelProps) {
+export function TodayPanel({ record, now, worksite, checkedOut, leaves = [] }: TodayPanelProps) {
   const theme = useTheme();
 
   const workedMinutes =
@@ -31,8 +34,8 @@ export function TodayPanel({ record, now, worksite, checkedOut }: TodayPanelProp
       ? formatTime(now)
       : `${Math.floor((workedMinutes ?? 0) / 60)}:${String((workedMinutes ?? 0) % 60).padStart(2, '0')}`;
 
-  const scheduleStart = worksite.startHour * 60 + worksite.startMinute;
-  const scheduleEnd = worksite.endHour * 60 + worksite.endMinute;
+  const { start: scheduleStart, end: scheduleEnd } =
+    scheduleMinutes(worksite, leaves) ?? scheduleMinutes(worksite)!;
   const nowMinutes = minutesOfDay(now);
 
   return (
@@ -62,10 +65,10 @@ export function TodayPanel({ record, now, worksite, checkedOut }: TodayPanelProp
         />
         <View style={styles.scale}>
           <ThemedText type="caption" themeColor="inkMuted">
-            {pad(worksite.startHour)}:{pad(worksite.startMinute)}
+            {formatClock(scheduleStart)}
           </ThemedText>
           <ThemedText type="caption" themeColor="inkMuted">
-            {pad(worksite.endHour)}:{pad(worksite.endMinute)}
+            {formatClock(scheduleEnd)}
           </ThemedText>
         </View>
       </View>
@@ -96,10 +99,6 @@ function Stamp({ label, value, filled }: { label: string; value: string; filled:
       </ThemedText>
     </View>
   );
-}
-
-function pad(value: number) {
-  return String(value).padStart(2, '0');
 }
 
 const styles = StyleSheet.create({

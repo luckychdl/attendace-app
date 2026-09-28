@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { StorageKeys } from '@/storage/keys';
-import type { AttendanceRecord, Session, Worksite } from '@/api/types';
+import type { AttendanceRecord, LeaveRequest, Session, Worksite } from '@/api/types';
 import { DEFAULT_WORKSITE } from '@/constants/worksite';
 
 async function readJson<T>(key: string, fallback: T): Promise<T> {
@@ -56,5 +56,24 @@ export const localStore = {
   },
   async setWorksite(worksite: Worksite) {
     await writeJson(StorageKeys.worksite, worksite);
+  },
+
+  /** 한 번도 저장한 적 없으면 null. 목 데이터를 채울지 판단할 때 쓴다. */
+  async getLeaves() {
+    return readJson<LeaveRequest[] | null>(StorageKeys.leaves, null);
+  },
+  async setLeaves(leaves: LeaveRequest[]) {
+    await writeJson(StorageKeys.leaves, leaves);
+  },
+  async upsertLeave(leave: LeaveRequest) {
+    const leaves = (await localStore.getLeaves()) ?? [];
+    const index = leaves.findIndex((item) => item.id === leave.id);
+    if (index >= 0) {
+      leaves[index] = leave;
+    } else {
+      leaves.push(leave);
+    }
+    await localStore.setLeaves(leaves);
+    return leave;
   },
 };

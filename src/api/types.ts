@@ -14,7 +14,11 @@ export type Employee = {
   name: string;
   department: string;
   position: string;
+  /** manager 는 같은 부서의 휴가 신청을 결재한다. 구버전 세션에는 없을 수 있다. */
+  role?: EmployeeRole;
 };
+
+export type EmployeeRole = 'member' | 'manager';
 
 export type Session = {
   employee: Employee;
@@ -77,4 +81,62 @@ export type MonthlySummary = {
   lateDays: number;
   earlyLeaveDays: number;
   totalWorkedMinutes: number;
+};
+
+export type LeaveType =
+  | 'annual' // 연차 (하루)
+  | 'halfAm' // 오전 반차
+  | 'halfPm' // 오후 반차
+  | 'hourly'; // 시차 (2시간 단위)
+
+export type LeaveStatus = 'pending' | 'approved' | 'rejected' | 'cancelled';
+
+export type LeaveRequest = {
+  id: string;
+  employeeId: string;
+  /** 결재 목록에서 보여 줄 신청자 정보 (신청 시점 기준) */
+  employeeName: string;
+  department: string;
+  type: LeaveType;
+  /** YYYY-MM-DD. 반차·시차는 startDate 와 endDate 가 같다. */
+  startDate: string;
+  endDate: string;
+  /** 시차의 시작·종료 시각 (HH:mm). 점심시간을 끼면 그만큼 뒤로 밀린다. 시차가 아니면 null */
+  startTime: string | null;
+  endTime: string | null;
+  /** 차감 일수. 주말은 빠지고 반차는 0.5, 시차는 시간 ÷ 8 */
+  days: number;
+  reason: string | null;
+  status: LeaveStatus;
+  /** ISO 8601 */
+  requestedAt: string;
+  /** ISO 8601. 결재(승인/반려) 전이면 null */
+  decidedAt: string | null;
+  /** 결재자 이름 */
+  decidedBy: string | null;
+};
+
+export type LeaveInput = {
+  employeeId: string;
+  type: LeaveType;
+  startDate: string;
+  endDate: string;
+  /** 시차만. 시작 시각 (HH:mm) */
+  startTime?: string | null;
+  /** 시차만. 2·4·6 시간 */
+  hours?: number | null;
+  reason?: string | null;
+};
+
+/** 연간 연차 현황 */
+export type LeaveBalance = {
+  year: number;
+  /** 부여 일수 */
+  granted: number;
+  /** 승인되어 차감된 일수 */
+  used: number;
+  /** 결재 대기 중인 일수 */
+  pending: number;
+  /** granted - used - pending */
+  remaining: number;
 };

@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 const TABS = [
   { name: 'index', title: '오늘', icon: 'today' },
   { name: 'history', title: '기록', icon: 'stats-chart' },
+  { name: 'leave', title: '휴가', icon: 'airplane' },
   { name: 'settings', title: '설정', icon: 'person' },
 ] as const;
 

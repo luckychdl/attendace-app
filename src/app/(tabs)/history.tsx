@@ -1,5 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -8,11 +8,14 @@ import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { MonthlySummary } from '@/features/attendance/monthly-summary';
 import { RecordRow } from '@/features/attendance/record-row';
+import { LeaveDayRow } from '@/features/leave/leave-day-row';
 import { useMonthlyAttendance } from '@/hooks/use-attendance';
 import { useEmployee } from '@/hooks/use-auth';
+import { useApprovedLeaves } from '@/hooks/use-leave';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
-import { shiftMonth, toMonthKey } from '@/lib/date';
+import { fromDateKey, monthRange, shiftMonth, toMonthKey } from '@/lib/date';
+import { approvedLeavesOn, datesInRange, describeLeave, isWeekend } from '@/lib/leave-rules';
 
 export default function HistoryScreen() {
   const employee = useEmployee();
@@ -23,6 +26,38 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { records, summary, loading, error, reload } = useMonthlyAttendance(employee.id, monthKey);
+  const { from, to } = monthRange(monthKey);
+  const { leaves, reload: reloadLeaves } = useApprovedLeaves(employee.id, from, to);
+
+  /** 근태 기록과 휴가일을 한 줄로 엮는다. 기록이 있는 날은 반차·시차 표시만 덧붙는다. */
+  const rows = useMemo(() => {
+    const recordDates = new Set(records.map((record) => record.workDate));
+    const leaveDates = new Set(
+      leaves.flatMap((leave) => datesInRange(leave.startDate, leave.endDate)),
+    );
+
+    const leaveOnly = [...leaveDates]
+      .filter((date) => date >= from && date <= to)
+      .filter((date) => !recordDates.has(date) && !isWeekend(fromDateKey(date)))
+      .map((date) => {
+        const dayLeaves = approvedLeavesOn(leaves, employee.id, date);
+        return {
+          kind: 'leave' as const,
+          date,
+          label: dayLeaves.map(describeLeave).join(' · '),
+          reason: dayLeaves.find((leave) => leave.reason)?.reason ?? null,
+        };
+      });
+
+    const worked = records.map((record) => ({
+      kind: 'record' as const,
+      date: record.workDate,
+      record,
+      leaves: approvedLeavesOn(leaves, employee.id, record.workDate),
+    }));
+
+    return [...worked, ...leaveOnly].sort((a, b) => b.date.localeCompare(a.date));
+  }, [employee.id, from, leaves, records, to]);
 
   const isCurrentMonth = monthKey === currentMonth;
   const [year, month] = monthKey.split('-').map(Number);
@@ -30,11 +65,11 @@ export default function HistoryScreen() {
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await reload();
+      await Promise.all([reload(), reloadLeaves()]);
     } finally {
       setRefreshing(false);
     }
-  }, [reload]);
+  }, [reload, reloadLeaves]);
 
   return (
     <ThemedView style={styles.container}>
@@ -77,14 +112,28 @@ export default function HistoryScreen() {
               <ThemedText type="body" themeColor="inkMuted" style={styles.placeholder}>
                 {error}
               </ThemedText>
-            ) : records.length === 0 ? (
+            ) : rows.length === 0 ? (
               <ThemedText type="body" themeColor="inkMuted" style={styles.placeholder}>
                 이 달에는 기록이 없습니다.
               </ThemedText>
             ) : (
-              records.map((record) => (
-                <RecordRow key={record.id} record={record} worksite={worksite} />
-              ))
+              rows.map((row) =>
+                row.kind === 'record' ? (
+                  <RecordRow
+                    key={row.record.id}
+                    record={row.record}
+                    worksite={worksite}
+                    leaves={row.leaves}
+                  />
+                ) : (
+                  <LeaveDayRow
+                    key={`leave-${row.date}`}
+                    dateKey={row.date}
+                    label={row.label}
+                    reason={row.reason}
+                  />
+                ),
+              )
             )}
           </View>
         </ScrollView>

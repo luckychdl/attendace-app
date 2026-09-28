@@ -1,13 +1,14 @@
 import * as Location from 'expo-location';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { API_BASE_URL, USE_MOCK_API } from '@/api/client';
 import { AppButton } from '@/components/app-button';
+import { Segmented } from '@/components/segmented';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { RADIUS_OPTIONS } from '@/constants/worksite';
 import { useAuth, useEmployee } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
@@ -18,7 +19,6 @@ export default function SettingsScreen() {
   const employee = useEmployee();
   const { logout } = useAuth();
   const { worksite, update } = useWorksite();
-  const theme = useTheme();
   const [pinning, setPinning] = useState(false);
 
   const handlePinCurrentLocation = async () => {
@@ -86,33 +86,16 @@ export default function SettingsScreen() {
             <ThemedText type="label" themeColor="inkMuted">
               허용 반경
             </ThemedText>
-            <View style={[styles.segments, { backgroundColor: theme.mutedSoft }]}>
-              {RADIUS_OPTIONS.map((option) => {
-                const selected = worksite.radiusMeters === option;
-                return (
-                  <Pressable
-                    key={option}
-                    accessibilityRole="button"
-                    accessibilityLabel={`허용 반경 ${formatDistance(option)}`}
-                    accessibilityState={{ selected }}
-                    onPress={() => update({ radiusMeters: option })}
-                    style={({ pressed }) => [
-                      styles.segment,
-                      {
-                        backgroundColor: selected ? theme.accent : 'transparent',
-                        opacity: pressed && !selected ? 0.6 : 1,
-                      },
-                    ]}>
-                    <ThemedText
-                      type="dataSmall"
-                      numberOfLines={1}
-                      style={{ color: selected ? theme.accentOn : theme.ink }}>
-                      {formatDistance(option)}
-                    </ThemedText>
-                  </Pressable>
-                );
-              })}
-            </View>
+            <Segmented
+              textType="dataSmall"
+              value={worksite.radiusMeters}
+              onChange={(radiusMeters) => update({ radiusMeters })}
+              options={RADIUS_OPTIONS.map((option) => ({
+                value: option,
+                label: formatDistance(option),
+                accessibilityLabel: `허용 반경 ${formatDistance(option)}`,
+              }))}
+            />
           </View>
 
           <AppButton
@@ -202,20 +185,5 @@ const styles = StyleSheet.create({
   },
   radiusBlock: {
     gap: Spacing.two,
-  },
-  /** 반경은 한 줄짜리 세그먼트. 고른 칸만 강조색으로 채운다. */
-  segments: {
-    flexDirection: 'row',
-    borderRadius: Radius.sm,
-    padding: 3,
-    gap: 3,
-  },
-  segment: {
-    flex: 1,
-    minHeight: TouchTarget - Spacing.two,
-    paddingHorizontal: Spacing.one,
-    borderRadius: Radius.xs,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

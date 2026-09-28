@@ -1,22 +1,28 @@
 import { StyleSheet, View } from 'react-native';
 
-import type { AttendanceRecord, Worksite } from '@/api/types';
+import type { AttendanceRecord, LeaveRequest, Worksite } from '@/api/types';
 import { SpanBar } from '@/components/span-bar';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { exceptionLabel, STATUS_LABEL, STATUS_TONE } from '@/lib/attendance-rules';
 import { formatDuration, formatTime, fromDateKey, minutesOfDay, weekdayName } from '@/lib/date';
+import { describeLeave, scheduleMinutes } from '@/lib/leave-rules';
 
 type RecordRowProps = {
   record: AttendanceRecord;
   worksite: Worksite;
+  /** 그날 승인된 반차·시차. 예정 근무시간 눈금이 그만큼 줄어든다. */
+  leaves?: readonly LeaveRequest[];
 };
 
 /** 하루 한 줄. 숫자로도 읽히고, 막대의 위치만 봐도 지각·조퇴가 보인다. */
-export function RecordRow({ record, worksite }: RecordRowProps) {
+export function RecordRow({ record, worksite, leaves = [] }: RecordRowProps) {
   const day = fromDateKey(record.workDate);
   const tone = STATUS_TONE[record.status];
   const exception = exceptionLabel(record.status);
+  // 하루를 다 쉰 날 나와서 일했다면 원래 근무시간을 눈금으로 쓴다.
+  const schedule = scheduleMinutes(worksite, leaves) ?? scheduleMinutes(worksite)!;
+  const notes = [exception, ...leaves.map(describeLeave)].filter(Boolean);
 
   return (
     <View style={styles.row}>
@@ -36,7 +42,7 @@ export function RecordRow({ record, worksite }: RecordRowProps) {
           </ThemedText>
           <ThemedText type="caption" themeColor="inkMuted">
             {formatDuration(record.workedMinutes)}
-            {exception ? `  ·  ${exception}` : ''}
+            {notes.map((note) => `  ·  ${note}`).join('')}
           </ThemedText>
         </View>
       </View>
@@ -44,8 +50,8 @@ export function RecordRow({ record, worksite }: RecordRowProps) {
       <SpanBar
         start={minutesOfDay(record.checkInAt)}
         end={minutesOfDay(record.checkOutAt)}
-        scheduleStart={worksite.startHour * 60 + worksite.startMinute}
-        scheduleEnd={worksite.endHour * 60 + worksite.endMinute}
+        scheduleStart={schedule.start}
+        scheduleEnd={schedule.end}
         tone={tone}
         label={`${formatTime(record.checkInAt)}부터 ${formatTime(record.checkOutAt)}까지, ${STATUS_LABEL[record.status]}`}
       />
