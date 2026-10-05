@@ -7,13 +7,14 @@ import { HoldButton } from '@/components/hold-button';
 import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { PlacePill } from '@/features/attendance/place-pill';
 import { TodayPanel } from '@/features/attendance/today-panel';
 import { useNow, useTodayAttendance } from '@/hooks/use-attendance';
 import { useEmployee } from '@/hooks/use-auth';
 import { useApprovedLeaves } from '@/hooks/use-leave';
 import { useCurrentLocation } from '@/hooks/use-location';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
 import { formatClock, formatFullDate, toDateKey, weekdayName } from '@/lib/date';
@@ -22,6 +23,7 @@ import { approvedLeavesOn, describeLeave, scheduleMinutes } from '@/lib/leave-ru
 export default function CheckInScreen() {
   const employee = useEmployee();
   const theme = useTheme();
+  const tabBarInset = useTabBarInset();
   const { worksite } = useWorksite();
   const now = useNow();
   const location = useCurrentLocation(worksite);
@@ -85,7 +87,7 @@ export default function CheckInScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -93,6 +95,10 @@ export default function CheckInScreen() {
               tintColor={theme.inkMuted}
             />
           }>
+          <ThemedText type="title" accessibilityRole="header">
+            {now.getMonth() + 1}월 {now.getDate()}일 {weekdayName(now)}요일
+          </ThemedText>
+
           <PlacePill worksite={worksite} location={location} onRefresh={location.refresh} />
 
           {todayLeaves.length > 0 ? (
@@ -100,9 +106,6 @@ export default function CheckInScreen() {
           ) : null}
 
           <View style={styles.stage}>
-            <ThemedText type="label" themeColor="inkMuted">
-              {now.getMonth() + 1}월 {now.getDate()}일 {weekdayName(now)}요일
-            </ThemedText>
             <TodayPanel
               record={record}
               now={now}
@@ -122,7 +125,7 @@ export default function CheckInScreen() {
 
           <View style={styles.actions}>
             {checkedOut ? (
-              <View style={[styles.closed, { backgroundColor: theme.surface }]}>
+              <View style={[styles.closed, { backgroundColor: theme.sunk }]}>
                 <ThemedText type="heading" themeColor="inkMuted">
                   오늘 근무 끝
                 </ThemedText>
@@ -182,25 +185,28 @@ const styles = StyleSheet.create({
   stage: {
     flex: 1,
     justifyContent: 'center',
-    gap: Spacing.two,
     paddingVertical: Spacing.four,
   },
   notice: {
     borderRadius: Radius.sm,
+    borderCurve: Curve,
     padding: Spacing.four,
   },
   actions: {
     gap: Spacing.three,
   },
+  /** 더 누를 게 없는 자리. 버튼과 같은 덩치지만 떠 있지 않고 눌러 들어가 있다. */
   closed: {
-    minHeight: TouchTarget + Spacing.five,
-    borderRadius: Radius.lg,
+    minHeight: TouchTarget + Spacing.six,
+    borderRadius: Radius.xl,
+    borderCurve: Curve,
     alignItems: 'center',
     justifyContent: 'center',
   },
   outside: {
     minHeight: TouchTarget,
     borderRadius: Radius.sm,
+    borderCurve: Curve,
     alignItems: 'center',
     justifyContent: 'center',
   },

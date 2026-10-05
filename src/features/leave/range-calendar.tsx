@@ -2,6 +2,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -59,7 +60,7 @@ export function RangeCalendar({ value, onChange, single, minDate, markedDates }:
   };
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface }]}>
+    <Card lift="mid" padded={false} style={styles.card}>
       <View style={styles.header}>
         <ThemedText type="heading" accessibilityRole="header">
           {year}년 {month}월
@@ -144,7 +145,7 @@ export function RangeCalendar({ value, onChange, single, minDate, markedDates }:
           );
         })}
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -170,7 +171,7 @@ function Arrow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.arrow,
-        { backgroundColor: theme.mutedSoft, opacity: disabled ? 0.35 : pressed ? 0.6 : 1 },
+        { backgroundColor: theme.sunk, opacity: disabled ? 0.35 : pressed ? 0.6 : 1 },
       ]}>
       <Ionicons name={`chevron-${direction}`} size={16} color={theme.ink} />
     </Pressable>
@@ -179,8 +180,8 @@ function Arrow({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radius.md,
     padding: Spacing.three,
+    paddingTop: Spacing.four,
     gap: Spacing.two,
   },
   header: {

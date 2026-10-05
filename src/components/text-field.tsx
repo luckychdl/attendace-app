@@ -2,14 +2,14 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, Elevation, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type TextFieldProps = TextInputProps & {
   label: string;
 };
 
-/** 테두리 대신 면으로 서는 입력칸. 포커스가 가면 강조색 링이 생긴다. */
+/** 눌러 들어간 홈으로 서는 입력칸. 포커스가 가면 흰 면으로 떠오르고 강조색 링이 생긴다. */
 export function TextField({ label, style, onFocus, onBlur, ...rest }: TextFieldProps) {
   const theme = useTheme();
   const [focused, setFocused] = useState(false);
@@ -32,9 +32,10 @@ export function TextField({ label, style, onFocus, onBlur, ...rest }: TextFieldP
         }}
         style={[
           styles.input,
+          focused ? Elevation.low : null,
           {
             color: theme.ink,
-            backgroundColor: theme.surface,
+            backgroundColor: focused ? theme.surface : theme.sunk,
             borderColor: focused ? theme.accent : 'transparent',
           },
           style,
@@ -52,9 +53,11 @@ const styles = StyleSheet.create({
   input: {
     minHeight: TouchTarget + Spacing.two,
     borderRadius: Radius.md,
+    borderCurve: Curve,
     borderWidth: 2,
     paddingHorizontal: Spacing.four,
     fontSize: 17,
     fontWeight: '600',
+    letterSpacing: -0.2,
   },
 });

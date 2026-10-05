@@ -32,13 +32,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.three,
+    paddingHorizontal: Spacing.three + 2,
     borderRadius: Radius.pill,
     alignSelf: 'flex-start',
   },
   dot: {
-    width: 7,
-    height: 7,
+    width: 6,
+    height: 6,
     borderRadius: Radius.pill,
   },
 });

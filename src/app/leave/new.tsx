@@ -1,4 +1,5 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
@@ -7,11 +8,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { leaveApi } from '@/api/leave';
 import type { LeaveBalance, LeaveRequest, LeaveType } from '@/api/types';
 import { AppButton } from '@/components/app-button';
+import { Card } from '@/components/card';
 import { Segmented } from '@/components/segmented';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, Elevation, MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { RangeCalendar, type DateRange } from '@/features/leave/range-calendar';
 import { useEmployee } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
@@ -181,6 +183,7 @@ export default function NewLeaveScreen() {
             onPress={() => router.back()}
             style={({ pressed }) => [
               styles.close,
+              Elevation.low,
               { backgroundColor: theme.surface, opacity: pressed ? 0.6 : 1 },
             ]}>
             <Ionicons name="close" size={20} color={theme.ink} />
@@ -224,7 +227,7 @@ export default function NewLeaveScreen() {
             </View>
           ) : null}
 
-          <View style={[styles.summary, { backgroundColor: theme.surface }]}>
+          <Card lift="mid" style={styles.summary}>
             {startDate && endDate ? (
               <>
                 <ThemedText type="heading">
@@ -252,7 +255,7 @@ export default function NewLeaveScreen() {
                 {PROMPT[type]}
               </ThemedText>
             )}
-          </View>
+          </Card>
 
           <TextField
             label="사유 (선택)"
@@ -299,11 +302,20 @@ function SlotChip({
       onPress={onPress}
       style={({ pressed }) => [
         styles.chip,
+        disabled ? null : Elevation.low,
         {
-          backgroundColor: selected ? theme.accent : theme.surface,
+          backgroundColor: theme.surface,
           opacity: disabled ? 0.35 : pressed && !selected ? 0.6 : 1,
         },
       ]}>
+      {selected ? (
+        <LinearGradient
+          colors={[theme.accent, theme.accentTo]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[StyleSheet.absoluteFill, styles.chipFill]}
+        />
+      ) : null}
       <ThemedText type="data" style={{ color: selected ? theme.accentOn : theme.ink }}>
         {label}
       </ThemedText>
@@ -355,12 +367,15 @@ const styles = StyleSheet.create({
     width: '48.5%',
     minHeight: TouchTarget,
     borderRadius: Radius.sm,
+    borderCurve: Curve,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  chipFill: {
+    borderRadius: Radius.sm,
+    borderCurve: Curve,
+  },
   summary: {
-    borderRadius: Radius.md,
-    padding: Spacing.four,
     gap: 2,
   },
 });

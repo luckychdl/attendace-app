@@ -1,9 +1,10 @@
 import { StyleSheet, View } from 'react-native';
 
 import type { AttendanceRecord, LeaveRequest, Worksite } from '@/api/types';
+import { Card } from '@/components/card';
 import { SpanBar } from '@/components/span-bar';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { STATUS_TONE } from '@/lib/attendance-rules';
 import { formatClock, formatTime, minutesBetween, minutesOfDay } from '@/lib/date';
@@ -73,11 +74,11 @@ export function TodayPanel({ record, now, worksite, checkedOut, leaves = [] }: T
         </View>
       </View>
 
-      <View style={[styles.stamps, { backgroundColor: theme.surface }]}>
+      <Card lift="mid" padded={false} style={styles.stamps}>
         <Stamp label="출근" value={formatTime(record?.checkInAt)} filled={!!record} />
         <View style={[styles.divider, { backgroundColor: theme.hairline }]} />
         <Stamp label="퇴근" value={formatTime(record?.checkOutAt)} filled={checkedOut} />
-      </View>
+      </Card>
 
       {record?.note ? (
         <ThemedText type="caption" themeColor="inkMuted" style={styles.note}>
@@ -116,9 +117,8 @@ const styles = StyleSheet.create({
   stamps: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: Radius.md,
     paddingVertical: Spacing.four,
-    marginTop: Spacing.three,
+    marginTop: Spacing.four,
   },
   stamp: {
     flex: 1,
@@ -126,8 +126,8 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   stampValue: {
-    fontSize: 24,
-    lineHeight: 28,
+    fontSize: 26,
+    lineHeight: 30,
   },
   divider: {
     width: StyleSheet.hairlineWidth,

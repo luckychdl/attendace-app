@@ -1,6 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import type { LeaveBalance } from '@/api/types';
+import { Card } from '@/components/card';
 import { Figure } from '@/components/figure';
 import { ThemedText } from '@/components/themed-text';
 import { Radius, Spacing } from '@/constants/theme';
@@ -19,14 +21,14 @@ export function BalanceCard({ balance }: { balance: LeaveBalance | null }) {
     `${granted > 0 ? Math.min(100, (days / granted) * 100) : 0}%`;
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface }]}>
+    <Card lift="mid" style={styles.card}>
       <ThemedText type="label" themeColor="inkMuted">
         남은 연차
       </ThemedText>
       <Figure
         value={balance ? formatDays(balance.remaining) : '—'}
         unit={balance ? `/ ${formatDays(granted)}일` : undefined}
-        size={44}
+        size={48}
       />
 
       <View
@@ -36,10 +38,15 @@ export function BalanceCard({ balance }: { balance: LeaveBalance | null }) {
             ? `${formatDays(granted)}일 중 ${formatDays(balance.used)}일 사용, ${formatDays(balance.pending)}일 결재 대기`
             : '연차 현황을 불러오는 중'
         }
-        style={[styles.meter, { backgroundColor: theme.mutedSoft }]}>
+        style={[styles.meter, { backgroundColor: theme.sunk }]}>
         {balance ? (
           <>
-            <View style={{ width: share(balance.used), backgroundColor: theme.accent }} />
+            <LinearGradient
+              colors={[theme.accent, theme.accentTo]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={{ width: share(balance.used) }}
+            />
             <View style={{ width: share(balance.pending), backgroundColor: theme.track }} />
           </>
         ) : null}
@@ -49,7 +56,7 @@ export function BalanceCard({ balance }: { balance: LeaveBalance | null }) {
         <Legend color={theme.accent} label="사용" days={balance?.used} />
         <Legend color={theme.track} label="결재 대기" days={balance?.pending} />
       </View>
-    </View>
+    </Card>
   );
 }
 
@@ -67,16 +74,15 @@ function Legend({ color, label, days }: { color: string; label: string; days?: n
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radius.md,
-    padding: Spacing.four,
+    padding: Spacing.five,
     gap: Spacing.two,
   },
   meter: {
     flexDirection: 'row',
-    height: 10,
+    height: 12,
     borderRadius: Radius.pill,
     overflow: 'hidden',
-    marginTop: Spacing.two,
+    marginTop: Spacing.three,
   },
   legend: {
     flexDirection: 'row',

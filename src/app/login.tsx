@@ -1,3 +1,5 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -7,7 +9,7 @@ import { AppButton } from '@/components/app-button';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { accentGlow, Curve, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -47,6 +49,13 @@ export default function LoginScreen() {
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag">
             <View style={styles.header}>
+              <LinearGradient
+                colors={[theme.accent, theme.accentTo]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[styles.mark, accentGlow(theme.accent)]}>
+                <Ionicons name="checkmark-sharp" size={34} color={theme.accentOn} />
+              </LinearGradient>
               <ThemedText type="title">출근체크</ThemedText>
               <ThemedText type="body" themeColor="inkMuted">
                 근무지에 도착하면 한 번, 나갈 때 한 번.
@@ -113,12 +122,23 @@ const styles = StyleSheet.create({
     width: '100%',
     alignSelf: 'center',
   },
-  header: { gap: Spacing.two },
+  header: { gap: Spacing.two, alignItems: 'flex-start' },
+  /** 로고 한 조각. 체크 한 번이 이 앱이 하는 일 전부다. */
+  mark: {
+    width: 64,
+    height: 64,
+    borderRadius: Radius.md,
+    borderCurve: Curve,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.three,
+  },
   form: { gap: Spacing.four },
   footer: { gap: Spacing.four },
   error: {
     padding: Spacing.four,
     borderRadius: Radius.sm,
+    borderCurve: Curve,
   },
   hint: { textAlign: 'center', lineHeight: 18 },
 });

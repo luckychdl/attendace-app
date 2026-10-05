@@ -1,4 +1,5 @@
 import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
@@ -12,7 +13,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, Elevation, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 /** 끝까지 눌러야 하는 시간(ms). 실수로 찍히는 걸 막되 답답하지 않을 만큼만. */
@@ -27,8 +28,10 @@ type HoldButtonProps = {
 };
 
 /**
- * 꾹 눌러 확정하는 버튼. 누르는 동안 강조색이 좌에서 우로 차오르고,
- * 끝까지 차면 동작이 일어난다. 손을 떼면 되감긴다.
+ * 꾹 눌러 확정하는 버튼. 화면에서 가장 큰 물건이고, 유일하게 색을 다 쓰는 자리다.
+ *
+ * 쉬고 있을 때는 옅은 강조색 면이, 누르는 동안 좌에서 우로 진한 그라데이션이 차오른다.
+ * 차오르는 앞머리에 밝은 선이 하나 서서 어디까지 왔는지 알려 준다. 손을 떼면 되감긴다.
  *
  * 글자는 두 벌을 겹쳐 두고 위쪽 벌을 차오르는 면과 함께 잘라 낸다.
  * 그래야 배경이 지나간 만큼만 글자색이 바뀐다.
@@ -81,47 +84,57 @@ export function HoldButton({
   const fillStyle = useAnimatedStyle(() => ({ width: progress.get() * width }));
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={body}
-      accessibilityHint={reduceMotion ? undefined : '끝까지 누르고 있으면 기록됩니다.'}
-      accessibilityState={{ disabled: isBlocked, busy: !!loading }}
-      disabled={isBlocked}
-      onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      onPress={reduceMotion && !isBlocked ? fire : undefined}
-      style={[styles.button, { backgroundColor: disabled ? theme.mutedSoft : theme.accentSoft }]}>
-      {loading ? (
-        <View style={styles.content}>
-          <ActivityIndicator color={theme.accent} />
-        </View>
-      ) : (
-        <>
-          <Face
-            label={body}
-            hint={disabled ? null : hint}
-            width={width}
-            color={disabled ? theme.inkMuted : theme.accent}
-            hintColor={theme.inkMuted}
-          />
+    // 차오르는 면을 모서리에 맞춰 자르려면 overflow 를 닫아야 하고,
+    // 닫으면 iOS 에서 그림자까지 잘린다. 그래서 그림자는 바깥 겹이 맡는다.
+    <View style={[styles.shell, disabled ? null : Elevation.mid]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={body}
+        accessibilityHint={reduceMotion ? undefined : '끝까지 누르고 있으면 기록됩니다.'}
+        accessibilityState={{ disabled: isBlocked, busy: !!loading }}
+        disabled={isBlocked}
+        onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        onPress={reduceMotion && !isBlocked ? fire : undefined}
+        style={[styles.button, { backgroundColor: disabled ? theme.mutedSoft : theme.accentSoft }]}>
+        {loading ? (
+          <View style={styles.content}>
+            <ActivityIndicator color={theme.accent} />
+          </View>
+        ) : (
+          <>
+            <Face
+              label={body}
+              hint={disabled ? null : hint}
+              width={width}
+              color={disabled ? theme.inkMuted : theme.accent}
+              hintColor={theme.inkMuted}
+            />
 
-          {!disabled ? (
-            <Animated.View
-              style={[styles.fill, { backgroundColor: theme.accent }, fillStyle]}
-              pointerEvents="none">
-              <Face
-                label={body}
-                hint={hint}
-                width={width}
-                color={theme.accentOn}
-                hintColor={theme.accentOn}
-              />
-            </Animated.View>
-          ) : null}
-        </>
-      )}
-    </Pressable>
+            {!disabled ? (
+              <Animated.View style={[styles.fill, fillStyle]} pointerEvents="none">
+                <LinearGradient
+                  colors={[theme.accent, theme.accentTo]}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={StyleSheet.absoluteFill}
+                />
+                <Face
+                  label={body}
+                  hint={hint}
+                  width={width}
+                  color={theme.accentOn}
+                  hintColor={theme.accentOn}
+                />
+                {/* 차오르는 앞머리. 진행이 어디까지 왔는지 선 하나로 짚는다. */}
+                <View style={styles.edge} />
+              </Animated.View>
+            ) : null}
+          </>
+        )}
+      </Pressable>
+    </View>
   );
 }
 
@@ -154,9 +167,14 @@ function Face({
 }
 
 const styles = StyleSheet.create({
+  shell: {
+    borderRadius: Radius.xl,
+    borderCurve: Curve,
+  },
   button: {
-    minHeight: TouchTarget + Spacing.five,
-    borderRadius: Radius.lg,
+    minHeight: TouchTarget + Spacing.six,
+    borderRadius: Radius.xl,
+    borderCurve: Curve,
     overflow: 'hidden',
     justifyContent: 'center',
   },
@@ -167,6 +185,14 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     overflow: 'hidden',
+  },
+  edge: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 2.5,
+    backgroundColor: 'rgba(255,255,255,0.8)',
   },
   content: {
     alignItems: 'center',

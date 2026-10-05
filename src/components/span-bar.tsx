@@ -1,9 +1,10 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { StyleSheet, View } from 'react-native';
 
 import { Radius, type ToneColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
-const HEIGHT = 12;
+const HEIGHT = 14;
 /** 데이터 막대는 눈금보다 얇게 얹는다. 위아래로 예정 근무시간이 비쳐야 대조가 된다. */
 const BAR_INSET = 3;
 /** 예정 근무시간 앞뒤로 남겨 두는 여백(분). 일찍 오거나 늦게 간 날이 축 밖으로 나가지 않게 한다. */
@@ -25,6 +26,8 @@ type SpanBarProps = {
 /**
  * 하루의 실제 근무 구간을 예정 근무시간 축 위에 얹는다.
  * 막대가 어디서 시작하고 끝나는지가 곧 지각·조퇴다.
+ *
+ * 근무 중인 구간만 그라데이션으로 칠한다 — 아직 자라고 있는 막대라는 뜻이다.
  */
 export function SpanBar({
   start,
@@ -54,7 +57,7 @@ export function SpanBar({
     <View
       accessible
       accessibilityLabel={label}
-      style={[styles.axis, { backgroundColor: theme.mutedSoft }]}>
+      style={[styles.axis, { backgroundColor: theme.sunk }]}>
       {/* 예정 근무시간. 데이터가 아니라 눈금이므로 뒤로 물러나 있다. */}
       <View
         style={[
@@ -64,19 +67,32 @@ export function SpanBar({
       />
 
       {barLeft != null && barWidth != null ? (
-        <View
-          style={[
-            styles.bar,
-            { left: `${barLeft}%`, width: `${barWidth}%`, backgroundColor: theme[tone] }
-          ]}
-        />
+        <View style={[styles.bar, { left: `${barLeft}%`, width: `${barWidth}%` }]}>
+          {tone === 'accent' ? (
+            <LinearGradient
+              colors={[theme.accent, theme.accentTo]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.fill}
+            />
+          ) : (
+            <View style={[styles.fill, { backgroundColor: theme[tone] }]} />
+          )}
+        </View>
       ) : barLeft != null ? (
         // 퇴근을 찍지 않은 날. 시작점만 남는다.
         <View style={[styles.stub, { left: `${barLeft}%`, backgroundColor: theme[tone] }]} />
       ) : null}
 
       {marker != null ? (
-        <View style={[styles.marker, { left: `${toPercent(marker)}%`, backgroundColor: theme.ink }]} />
+        // 지금 시각. 데이터가 아니라 기준선이라, 막대 위에서도 읽히게 바탕색 테를 두르고 가늘게 긋는다.
+        <View
+          style={[
+            styles.markerSlot,
+            { left: `${toPercent(marker)}%`, backgroundColor: theme.sunk },
+          ]}>
+          <View style={[styles.markerLine, { backgroundColor: theme.ink }]} />
+        </View>
       ) : null}
     </View>
   );
@@ -98,6 +114,11 @@ const styles = StyleSheet.create({
     top: BAR_INSET,
     bottom: BAR_INSET,
     borderRadius: Radius.pill,
+    overflow: 'hidden',
+  },
+  fill: {
+    flex: 1,
+    borderRadius: Radius.pill,
   },
   stub: {
     position: 'absolute',
@@ -106,12 +127,19 @@ const styles = StyleSheet.create({
     width: HEIGHT - BAR_INSET * 2,
     borderRadius: Radius.pill,
   },
-  /** 지금 시각. 데이터가 아니라 기준선이라 가늘게 긋는다. */
-  marker: {
+  markerSlot: {
     position: 'absolute',
     top: 0,
     bottom: 0,
+    width: 6,
+    marginLeft: -3,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  markerLine: {
     width: 2,
-    marginLeft: -1,
+    alignSelf: 'stretch',
+    marginVertical: 1,
+    borderRadius: Radius.pill,
   },
 });

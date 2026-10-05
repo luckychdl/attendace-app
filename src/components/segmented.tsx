@@ -1,7 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText, type TextType } from '@/components/themed-text';
-import { Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, Elevation, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 type SegmentedProps<T extends string | number> = {
@@ -12,7 +13,7 @@ type SegmentedProps<T extends string | number> = {
   textType?: TextType;
 };
 
-/** 한 줄짜리 세그먼트. 고른 칸만 강조색으로 채운다. */
+/** 한 줄짜리 세그먼트. 눌러 들어간 홈 위에서 고른 칸만 강조색으로 떠오른다. */
 export function Segmented<T extends string | number>({
   options,
   value,
@@ -22,7 +23,7 @@ export function Segmented<T extends string | number>({
   const theme = useTheme();
 
   return (
-    <View style={[styles.segments, { backgroundColor: theme.mutedSoft }]}>
+    <View style={[styles.segments, { backgroundColor: theme.sunk }]}>
       {options.map((option) => {
         const selected = option.value === value;
         return (
@@ -34,15 +35,21 @@ export function Segmented<T extends string | number>({
             onPress={() => onChange(option.value)}
             style={({ pressed }) => [
               styles.segment,
-              {
-                backgroundColor: selected ? theme.accent : 'transparent',
-                opacity: pressed && !selected ? 0.6 : 1,
-              },
+              selected ? Elevation.low : null,
+              { opacity: pressed && !selected ? 0.6 : 1 },
             ]}>
+            {selected ? (
+              <LinearGradient
+                colors={[theme.accent, theme.accentTo]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={[StyleSheet.absoluteFill, styles.fill]}
+              />
+            ) : null}
             <ThemedText
               type={textType}
               numberOfLines={1}
-              style={{ color: selected ? theme.accentOn : theme.ink }}>
+              style={{ color: selected ? theme.accentOn : theme.inkMuted }}>
               {option.label}
             </ThemedText>
           </Pressable>
@@ -56,15 +63,21 @@ const styles = StyleSheet.create({
   segments: {
     flexDirection: 'row',
     borderRadius: Radius.sm,
-    padding: 3,
-    gap: 3,
+    borderCurve: Curve,
+    padding: 4,
+    gap: 4,
   },
   segment: {
     flex: 1,
     minHeight: TouchTarget - Spacing.two,
     paddingHorizontal: Spacing.one,
     borderRadius: Radius.xs,
+    borderCurve: Curve,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  fill: {
+    borderRadius: Radius.xs,
+    borderCurve: Curve,
   },
 });

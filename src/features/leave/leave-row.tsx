@@ -1,10 +1,10 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import type { LeaveRequest } from '@/api/types';
+import { Card } from '@/components/card';
 import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
-import { useTheme } from '@/hooks/use-theme';
+import { Spacing } from '@/constants/theme';
 import {
   describeLeave,
   formatDays,
@@ -33,8 +33,6 @@ export function LeaveRow({
   accessibilityHint,
   children,
 }: LeaveRowProps) {
-  const theme = useTheme();
-
   const detail = [
     showApplicant ? leave.employeeName : null,
     describeLeave(leave),
@@ -45,7 +43,7 @@ export function LeaveRow({
     .join('  ·  ');
 
   return (
-    <View style={[styles.card, { backgroundColor: theme.surface }]}>
+    <Card style={styles.card}>
       <Pressable
         accessibilityRole={onPress ? 'button' : undefined}
         accessibilityHint={accessibilityHint}
@@ -75,14 +73,12 @@ export function LeaveRow({
       </Pressable>
 
       {children ? <View style={styles.actions}>{children}</View> : null}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: Radius.md,
-    padding: Spacing.four,
     gap: Spacing.three,
   },
   head: {

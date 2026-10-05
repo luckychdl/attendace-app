@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Radius, Spacing } from '@/constants/theme';
+import { Curve, Radius, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { fromDateKey, weekdayName } from '@/lib/date';
 
@@ -65,6 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.two,
     borderRadius: Radius.sm,
+    borderCurve: Curve,
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
   },

@@ -12,6 +12,7 @@ import { BalanceCard } from '@/features/leave/balance-card';
 import { LeaveRow } from '@/features/leave/leave-row';
 import { useEmployee } from '@/hooks/use-auth';
 import { useLeave } from '@/hooks/use-leave';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTheme } from '@/hooks/use-theme';
 import { describeLeave, formatLeavePeriod, isCancellable } from '@/lib/leave-rules';
 
@@ -25,6 +26,7 @@ function failed(caught: unknown) {
 export default function LeaveScreen() {
   const employee = useEmployee();
   const theme = useTheme();
+  const tabBarInset = useTabBarInset();
   const router = useRouter();
   const year = new Date().getFullYear();
   const [refreshing, setRefreshing] = useState(false);
@@ -71,7 +73,7 @@ export default function LeaveScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -159,7 +161,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: {
     padding: Spacing.five,
-    paddingBottom: Spacing.seven,
     gap: Spacing.four,
     maxWidth: MaxContentWidth,
     width: '100%',

@@ -3,15 +3,17 @@ import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Card } from '@/components/card';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
+import { Curve, Elevation, MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { MonthlySummary } from '@/features/attendance/monthly-summary';
 import { RecordRow } from '@/features/attendance/record-row';
 import { LeaveDayRow } from '@/features/leave/leave-day-row';
 import { useMonthlyAttendance } from '@/hooks/use-attendance';
 import { useEmployee } from '@/hooks/use-auth';
 import { useApprovedLeaves } from '@/hooks/use-leave';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
 import { fromDateKey, monthRange, shiftMonth, toMonthKey } from '@/lib/date';
@@ -20,6 +22,7 @@ import { approvedLeavesOn, datesInRange, describeLeave, isWeekend } from '@/lib/
 export default function HistoryScreen() {
   const employee = useEmployee();
   const theme = useTheme();
+  const tabBarInset = useTabBarInset();
   const { worksite } = useWorksite();
   const currentMonth = toMonthKey(new Date());
   const [monthKey, setMonthKey] = useState(currentMonth);
@@ -75,7 +78,7 @@ export default function HistoryScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
-          contentContainerStyle={styles.content}
+          contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -105,7 +108,7 @@ export default function HistoryScreen() {
 
           <MonthlySummary summary={summary} />
 
-          <View style={styles.list}>
+          <Card padded={false} style={styles.list}>
             {loading && records.length === 0 ? (
               <ActivityIndicator style={styles.placeholder} color={theme.inkMuted} />
             ) : error ? (
@@ -135,7 +138,7 @@ export default function HistoryScreen() {
                 ),
               )
             )}
-          </View>
+          </Card>
         </ScrollView>
       </SafeAreaView>
     </ThemedView>
@@ -164,6 +167,7 @@ function MonthArrow({
       onPress={onPress}
       style={({ pressed }) => [
         styles.arrow,
+        disabled ? null : Elevation.low,
         {
           backgroundColor: theme.surface,
           opacity: disabled ? 0.35 : pressed ? 0.6 : 1,
@@ -179,7 +183,6 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: {
     padding: Spacing.five,
-    paddingBottom: Spacing.seven,
     gap: Spacing.four,
     maxWidth: MaxContentWidth,
     width: '100%',
@@ -200,14 +203,17 @@ const styles = StyleSheet.create({
     width: TouchTarget,
     height: TouchTarget,
     borderRadius: Radius.pill,
+    borderCurve: Curve,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  /** 하루 한 줄이 흰 면 위에 쌓인다. 달 요약 카드와 같은 언어로 묶인다. */
   list: {
-    paddingTop: Spacing.two,
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two,
   },
   placeholder: {
-    paddingVertical: Spacing.seven,
+    paddingVertical: Spacing.six,
     textAlign: 'center',
   },
 });

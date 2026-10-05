@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import * as Location from 'expo-location';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
@@ -5,18 +6,22 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { API_BASE_URL, USE_MOCK_API } from '@/api/client';
 import { AppButton } from '@/components/app-button';
+import { Card } from '@/components/card';
 import { Segmented } from '@/components/segmented';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { MaxContentWidth, Radius, Spacing } from '@/constants/theme';
+import { accentGlow, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { RADIUS_OPTIONS } from '@/constants/worksite';
 import { useAuth, useEmployee } from '@/hooks/use-auth';
+import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
 import { formatDistance } from '@/lib/geo';
 
 export default function SettingsScreen() {
   const employee = useEmployee();
+  const theme = useTheme();
+  const tabBarInset = useTabBarInset();
   const { logout } = useAuth();
   const { worksite, update } = useWorksite();
   const [pinning, setPinning] = useState(false);
@@ -54,12 +59,23 @@ export default function SettingsScreen() {
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}>
           <View style={styles.identity}>
-            <ThemedText type="title">{employee.name}</ThemedText>
-            <ThemedText type="body" themeColor="inkMuted">
-              {employee.department} {employee.position}
-            </ThemedText>
+            <LinearGradient
+              colors={[theme.accent, theme.accentTo]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={[styles.avatar, accentGlow(theme.accent)]}>
+              <ThemedText type="title" style={{ color: theme.accentOn }}>
+                {employee.name.slice(0, 1)}
+              </ThemedText>
+            </LinearGradient>
+            <View style={styles.identityText}>
+              <ThemedText type="title">{employee.name}</ThemedText>
+              <ThemedText type="body" themeColor="inkMuted">
+                {employee.department} {employee.position}
+              </ThemedText>
+            </View>
           </View>
 
           <Group title="내 정보">
@@ -121,14 +137,14 @@ export default function SettingsScreen() {
 }
 
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
-  const theme = useTheme();
-
   return (
     <View style={styles.group}>
       <ThemedText type="label" themeColor="inkMuted">
         {title}
       </ThemedText>
-      <View style={[styles.groupBody, { backgroundColor: theme.surface }]}>{children}</View>
+      <Card padded={false} style={styles.groupBody}>
+        {children}
+      </Card>
     </View>
   );
 }
@@ -155,21 +171,33 @@ const styles = StyleSheet.create({
   safeArea: { flex: 1 },
   content: {
     padding: Spacing.five,
-    paddingBottom: Spacing.seven,
     gap: Spacing.five,
     maxWidth: MaxContentWidth,
     width: '100%',
     alignSelf: 'center',
   },
   identity: {
-    gap: Spacing.one,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.four,
     paddingBottom: Spacing.two,
+  },
+  /** 이름 첫 자를 강조색 원에 박는다. 설정 화면에서 유일하게 색을 쓰는 자리. */
+  avatar: {
+    width: 60,
+    height: 60,
+    borderRadius: Radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  identityText: {
+    flex: 1,
+    gap: Spacing.one,
   },
   group: {
     gap: Spacing.two,
   },
   groupBody: {
-    borderRadius: Radius.md,
     paddingHorizontal: Spacing.four,
   },
   row: {
