@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { LeaveRequest } from '@/api/types';
 import { AppButton } from '@/components/app-button';
+import { ScreenWash } from '@/components/screen-wash';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
@@ -71,6 +72,7 @@ export default function LeaveScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenWash />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}

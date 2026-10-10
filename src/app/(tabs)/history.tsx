@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, V
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Card } from '@/components/card';
+import { ScreenWash } from '@/components/screen-wash';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Curve, Elevation, MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
@@ -76,6 +77,7 @@ export default function HistoryScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenWash />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}

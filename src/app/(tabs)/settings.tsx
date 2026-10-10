@@ -8,6 +8,7 @@ import { API_BASE_URL, USE_MOCK_API } from '@/api/client';
 import { AppButton } from '@/components/app-button';
 import { Card } from '@/components/card';
 import { Segmented } from '@/components/segmented';
+import { ScreenWash } from '@/components/screen-wash';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { accentGlow, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
@@ -58,6 +59,7 @@ export default function SettingsScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenWash />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}>
           <View style={styles.identity}>

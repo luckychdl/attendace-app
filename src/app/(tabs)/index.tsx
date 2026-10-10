@@ -1,23 +1,25 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Alert, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import type { LeaveRequest, Worksite } from '@/api/types';
+import type { AttendanceStatus, LeaveRequest, Worksite } from '@/api/types';
 import { HoldButton } from '@/components/hold-button';
+import { ScreenWash } from '@/components/screen-wash';
 import { StatusPill } from '@/components/status-pill';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Curve, MaxContentWidth, Radius, Spacing, TouchTarget } from '@/constants/theme';
 import { PlacePill } from '@/features/attendance/place-pill';
 import { TodayPanel } from '@/features/attendance/today-panel';
-import { useNow, useTodayAttendance } from '@/hooks/use-attendance';
+import { WeekStrip } from '@/features/attendance/week-strip';
+import { useMonthlyAttendance, useNow, useTodayAttendance } from '@/hooks/use-attendance';
 import { useEmployee } from '@/hooks/use-auth';
 import { useApprovedLeaves } from '@/hooks/use-leave';
 import { useCurrentLocation } from '@/hooks/use-location';
 import { useTabBarInset } from '@/hooks/use-tab-bar-inset';
 import { useTheme } from '@/hooks/use-theme';
 import { useWorksite } from '@/hooks/use-worksite';
-import { formatClock, formatFullDate, toDateKey, weekdayName } from '@/lib/date';
+import { formatClock, formatFullDate, toDateKey, toMonthKey, weekdayName } from '@/lib/date';
 import { approvedLeavesOn, describeLeave, scheduleMinutes } from '@/lib/leave-rules';
 
 export default function CheckInScreen() {
@@ -33,6 +35,22 @@ export default function CheckInScreen() {
   const todayKey = toDateKey(now);
   const { leaves } = useApprovedLeaves(employee.id, todayKey, todayKey);
   const todayLeaves = approvedLeavesOn(leaves, employee.id, todayKey);
+
+  // 이번 주가 두 달에 걸칠 수 있어, 월요일이 든 달과 일요일이 든 달을 둘 다 읽는다.
+  const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  weekStart.setDate(weekStart.getDate() - ((weekStart.getDay() + 6) % 7));
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  const { records: headRecords } = useMonthlyAttendance(employee.id, toMonthKey(weekStart));
+  const { records: tailRecords } = useMonthlyAttendance(employee.id, toMonthKey(weekEnd));
+
+  const weekStatuses = useMemo(() => {
+    const statuses = new Map<string, AttendanceStatus>();
+    for (const item of [...headRecords, ...tailRecords]) statuses.set(item.workDate, item.status);
+    // 오늘은 방금 찍은 기록이 달 목록보다 새롭다.
+    if (record) statuses.set(record.workDate, record.status);
+    return statuses;
+  }, [headRecords, record, tailRecords]);
 
   // 첫 진입의 로딩까지 당겨서 새로고침으로 보여주지 않도록 분리한다.
   const [refreshing, setRefreshing] = useState(false);
@@ -85,6 +103,7 @@ export default function CheckInScreen() {
 
   return (
     <ThemedView style={styles.container}>
+      <ScreenWash />
       <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
         <ScrollView
           contentContainerStyle={[styles.content, { paddingBottom: tabBarInset }]}
@@ -98,6 +117,8 @@ export default function CheckInScreen() {
           <ThemedText type="title" accessibilityRole="header">
             {now.getMonth() + 1}월 {now.getDate()}일 {weekdayName(now)}요일
           </ThemedText>
+
+          <WeekStrip today={now} statuses={weekStatuses} />
 
           <PlacePill worksite={worksite} location={location} onRefresh={location.refresh} />
 
