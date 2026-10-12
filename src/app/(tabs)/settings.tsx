@@ -26,6 +26,14 @@ export default function SettingsScreen() {
   const { logout } = useAuth();
   const { worksite, update } = useWorksite();
   const [pinning, setPinning] = useState(false);
+  // 실서버의 근무지는 전 직원이 함께 쓰는 설정이라 팀장만 바꿀 수 있다.
+  const canEditWorksite = USE_MOCK_API || employee.role === 'manager';
+
+  const saveFailed = (caught: unknown) =>
+    Alert.alert(
+      '근무지를 저장하지 못했습니다',
+      caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.',
+    );
 
   const handlePinCurrentLocation = async () => {
     setPinning(true);
@@ -35,16 +43,22 @@ export default function SettingsScreen() {
         Alert.alert('위치 권한이 필요합니다', '설정에서 위치 접근을 허용해 주세요.');
         return;
       }
-      const position = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      let position: Location.LocationObject;
+      try {
+        position = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+      } catch {
+        Alert.alert('현재 위치를 가져오지 못했습니다', 'GPS 상태를 확인한 뒤 다시 시도해 주세요.');
+        return;
+      }
       await update({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
       });
       Alert.alert('근무지를 옮겼습니다', '현재 위치를 근무지 기준점으로 저장했습니다.');
-    } catch {
-      Alert.alert('현재 위치를 가져오지 못했습니다', 'GPS 상태를 확인한 뒤 다시 시도해 주세요.');
+    } catch (caught) {
+      saveFailed(caught);
     } finally {
       setPinning(false);
     }
@@ -81,6 +95,7 @@ export default function SettingsScreen() {
           </View>
 
           <Group title="내 정보">
+            {employee.companyName ? <Row label="회사" value={employee.companyName} /> : null}
             <Row label="사번" value={employee.employeeNo} mono />
             <Row label="부서" value={employee.department} />
             <Row label="직급" value={employee.position} />
@@ -100,35 +115,47 @@ export default function SettingsScreen() {
             />
           </Group>
 
-          <View style={styles.radiusBlock}>
-            <ThemedText type="label" themeColor="inkMuted">
-              허용 반경
-            </ThemedText>
-            <Segmented
-              textType="dataSmall"
-              value={worksite.radiusMeters}
-              onChange={(radiusMeters) => update({ radiusMeters })}
-              options={RADIUS_OPTIONS.map((option) => ({
-                value: option,
-                label: formatDistance(option),
-                accessibilityLabel: `허용 반경 ${formatDistance(option)}`,
-              }))}
-            />
-          </View>
+          {canEditWorksite ? (
+            <>
+              <View style={styles.radiusBlock}>
+                <ThemedText type="label" themeColor="inkMuted">
+                  허용 반경
+                </ThemedText>
+                <Segmented
+                  textType="dataSmall"
+                  value={worksite.radiusMeters}
+                  onChange={(radiusMeters) => update({ radiusMeters }).catch(saveFailed)}
+                  options={RADIUS_OPTIONS.map((option) => ({
+                    value: option,
+                    label: formatDistance(option),
+                    accessibilityLabel: `허용 반경 ${formatDistance(option)}`,
+                  }))}
+                />
+              </View>
 
-          <AppButton
-            label="현재 위치를 근무지로 지정"
-            variant="soft"
-            onPress={handlePinCurrentLocation}
-            loading={pinning}
-          />
+              <AppButton
+                label="현재 위치를 근무지로 지정"
+                variant="soft"
+                onPress={handlePinCurrentLocation}
+                loading={pinning}
+              />
+            </>
+          ) : (
+            <Group title="허용 반경">
+              <Row label="반경" value={formatDistance(worksite.radiusMeters)} mono />
+            </Group>
+          )}
 
           <Group title="서버 연동">
             <Row label="모드" value={USE_MOCK_API ? '로컬 목 데이터' : '실서버'} />
             <Row label="API 주소" value={USE_MOCK_API ? '미설정' : API_BASE_URL} mono />
           </Group>
           <ThemedText type="caption" themeColor="inkMuted">
-            .env 의 EXPO_PUBLIC_API_BASE_URL 을 채우면 같은 화면이 실서버 데이터로 동작합니다.
+            {USE_MOCK_API
+              ? '.env 의 EXPO_PUBLIC_API_BASE_URL 을 채우면 같은 화면이 실서버 데이터로 동작합니다.'
+              : canEditWorksite
+                ? '근무지 설정을 바꾸면 회사 전 직원의 출퇴근 기준에 바로 반영됩니다.'
+                : '근무지 설정은 팀장만 변경할 수 있습니다.'}
           </ThemedText>
 
           <AppButton label="로그아웃" variant="ghost" onPress={handleLogout} />

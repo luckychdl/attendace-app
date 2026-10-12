@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { authApi, type LoginInput } from '@/api/auth';
+import { authApi, type LoginInput, type SignupInput } from '@/api/auth';
+import { setUnauthorizedHandler } from '@/api/client';
 import type { Session } from '@/api/types';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
@@ -9,6 +10,8 @@ type AuthContextValue = {
   status: AuthStatus;
   session: Session | null;
   login: (input: LoginInput) => Promise<void>;
+  /** 가입에 성공하면 바로 로그인된 상태가 된다. */
+  signup: (input: SignupInput) => Promise<void>;
   logout: () => Promise<void>;
 };
 
@@ -37,8 +40,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // 쓰는 도중 토큰이 만료되면 (서버가 401) 세션을 비워 로그인 화면으로 돌려보낸다.
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      authApi.logout().catch(() => {});
+      setSession(null);
+      setStatus('unauthenticated');
+    });
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const login = useCallback(async (input: LoginInput) => {
     const next = await authApi.login(input);
+    setSession(next);
+    setStatus('authenticated');
+  }, []);
+
+  const signup = useCallback(async (input: SignupInput) => {
+    const next = await authApi.signup(input);
     setSession(next);
     setStatus('authenticated');
   }, []);
@@ -50,8 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, session, login, logout }),
-    [status, session, login, logout],
+    () => ({ status, session, login, signup, logout }),
+    [status, session, login, signup, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

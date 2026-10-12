@@ -4,4 +4,5 @@ export const StorageKeys = {
   records: '@attendance/records',
   worksite: '@attendance/worksite',
   leaves: '@attendance/leaves',
+  lastCompany: '@attendance/last-company',
 } as const;

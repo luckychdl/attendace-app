@@ -28,6 +28,18 @@ export function setAuthToken(token: string | null) {
   authToken = token;
 }
 
+let onUnauthorized: (() => void) | null = null;
+
+/** 토큰이 만료됐거나 계정이 막혀 서버가 401 을 돌려줬을 때 부를 함수. 세션을 비우는 쪽에서 등록한다. */
+export function setUnauthorizedHandler(handler: (() => void) | null) {
+  onUnauthorized = handler;
+}
+
+/** 서버에 닿지 못한 실패 (네트워크 끊김 · 응답 지연). 저장해 둔 값으로 버틸 수 있는 경우를 가린다. */
+export function isOffline(error: unknown) {
+  return error instanceof ApiError && (error.status === 0 || error.status === 408);
+}
+
 type RequestOptions = {
   method?: 'GET' | 'POST' | 'PATCH' | 'DELETE';
   body?: unknown;
@@ -42,6 +54,8 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     if (value !== undefined) url.searchParams.set(key, String(value));
   });
 
+  // 요청을 보낸 시점의 토큰. 응답을 기다리는 사이 다시 로그인했다면 그 세션을 건드리지 않는다.
+  const sentToken = authToken;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
@@ -51,13 +65,14 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal: controller.signal,
       headers: {
         'Content-Type': 'application/json',
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        ...(sentToken ? { Authorization: `Bearer ${sentToken}` } : {}),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
+      if (response.status === 401 && sentToken && sentToken === authToken) onUnauthorized?.();
       throw new ApiError(text || `요청이 실패했습니다 (${response.status})`, response.status);
     }
 

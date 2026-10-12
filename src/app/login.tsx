@@ -1,6 +1,7 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -12,25 +13,41 @@ import { ThemedView } from '@/components/themed-view';
 import { accentGlow, Curve, MaxContentWidth, Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/hooks/use-auth';
 import { useTheme } from '@/hooks/use-theme';
+import { localStore } from '@/storage/local-store';
 
 export default function LoginScreen() {
   const { login } = useAuth();
   const theme = useTheme();
+  const router = useRouter();
+  const [companyName, setCompanyName] = useState('');
   const [employeeNo, setEmployeeNo] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 지난번에 로그인한 회사명을 미리 채워 둔다. 그 사이 입력을 시작했으면 건드리지 않는다.
+  useEffect(() => {
+    if (USE_MOCK_API) return;
+    localStore
+      .getLastCompany()
+      .then((last) => setCompanyName((current) => current || last))
+      .catch(() => {});
+  }, []);
+
   const handleSubmit = async () => {
-    if (!employeeNo.trim() || !password) {
-      setError('사번과 비밀번호를 모두 입력해 주세요.');
+    if ((!USE_MOCK_API && !companyName.trim()) || !employeeNo.trim() || !password) {
+      setError(
+        USE_MOCK_API
+          ? '사번과 비밀번호를 모두 입력해 주세요.'
+          : '회사명, 사번, 비밀번호를 모두 입력해 주세요.',
+      );
       return;
     }
 
     setSubmitting(true);
     setError(null);
     try {
-      await login({ employeeNo, password });
+      await login({ companyName, employeeNo, password });
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : '사번 또는 비밀번호가 맞지 않습니다.');
     } finally {
@@ -63,6 +80,17 @@ export default function LoginScreen() {
             </View>
 
             <View style={styles.form}>
+              {USE_MOCK_API ? null : (
+                <TextField
+                  label="회사명"
+                  value={companyName}
+                  onChangeText={setCompanyName}
+                  placeholder="가입할 때 쓴 회사명"
+                  autoCapitalize="none"
+                  autoComplete="organization"
+                  returnKeyType="next"
+                />
+              )}
               <TextField
                 label="사번"
                 value={employeeNo}
@@ -100,7 +128,13 @@ export default function LoginScreen() {
                 <ThemedText type="caption" themeColor="inkMuted" style={styles.hint}>
                   데모 계정은 사번 1001, 1002, 2001 이고 비밀번호는 모두 1234 입니다.
                 </ThemedText>
-              ) : null}
+              ) : (
+                <AppButton
+                  label="회사 등록 · 회원가입"
+                  variant="ghost"
+                  onPress={() => router.push('/signup')}
+                />
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

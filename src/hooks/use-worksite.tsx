@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { Worksite } from '@/api/types';
 import { worksiteApi } from '@/api/worksite';
 import { DEFAULT_WORKSITE } from '@/constants/worksite';
+import { useAuth } from '@/hooks/use-auth';
 
 type WorksiteContextValue = {
   worksite: Worksite;
@@ -15,8 +16,12 @@ const WorksiteContext = createContext<WorksiteContextValue | null>(null);
 export function WorksiteProvider({ children }: { children: React.ReactNode }) {
   const [worksite, setWorksite] = useState<Worksite>(DEFAULT_WORKSITE);
   const [loading, setLoading] = useState(true);
+  const { session } = useAuth();
+  const employeeId = session?.employee.id ?? null;
 
+  // 근무지는 로그인해야 읽을 수 있으므로 세션이 생기거나 바뀔 때마다 다시 받는다.
   useEffect(() => {
+    if (!employeeId) return;
     let cancelled = false;
 
     worksiteApi
@@ -34,7 +39,7 @@ export function WorksiteProvider({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [employeeId]);
 
   const update = useCallback(
     async (patch: Partial<Worksite>) => {

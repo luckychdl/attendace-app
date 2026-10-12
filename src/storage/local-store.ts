@@ -33,6 +33,14 @@ export const localStore = {
     await AsyncStorage.removeItem(StorageKeys.session);
   },
 
+  /** 마지막으로 로그인한 회사명. 로그인 화면에 미리 채워 준다. */
+  async getLastCompany() {
+    return readJson<string>(StorageKeys.lastCompany, '');
+  },
+  async setLastCompany(companyName: string) {
+    await writeJson(StorageKeys.lastCompany, companyName);
+  },
+
   async getRecords() {
     return readJson<AttendanceRecord[]>(StorageKeys.records, []);
   },
