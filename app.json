@@ -1,15 +1,15 @@
 {
   "expo": {
-    "name": "출근체크",
-    "slug": "attendance-app",
+    "name": "오늘근무",
+    "slug": "onwork",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "attendanceapp",
+    "scheme": "onwork",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.example.attendanceapp",
+      "bundleIdentifier": "com.example.onwork",
       "supportsTablet": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "근무지 반경 안에서 출퇴근 체크를 확인하기 위해 위치 정보를 사용합니다."
@@ -23,7 +23,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.example.attendanceapp",
+      "package": "com.example.onwork",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"

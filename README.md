@@ -1,4 +1,4 @@
-# 출근체크 (attendance-app)
+# 오늘근무 (onwork)
 
 직원용 출퇴근 체크 앱. React Native + Expo (SDK 57, expo-router).
 GPS로 근무지 반경 안에 있는지 확인한 뒤 출근/퇴근을 기록합니다.

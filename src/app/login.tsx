@@ -73,7 +73,7 @@ export default function LoginScreen() {
                 style={[styles.mark, accentGlow(theme.accent)]}>
                 <Ionicons name="checkmark-sharp" size={34} color={theme.accentOn} />
               </LinearGradient>
-              <ThemedText type="title">출근체크</ThemedText>
+              <ThemedText type="title">오늘근무</ThemedText>
               <ThemedText type="body" themeColor="inkMuted">
                 근무지에 도착하면 한 번, 나갈 때 한 번.
               </ThemedText>
