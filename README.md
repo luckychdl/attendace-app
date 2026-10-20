@@ -41,11 +41,11 @@ npm run typecheck  # 타입 체크
 
 ## 서버 연동
 
-서버는 [attendance-app-server](../attendance-app-server)(NestJS + Supabase)입니다. 서버를 먼저 띄운 뒤
+서버는 [onwork-server](../onwork-server)(NestJS + Supabase)입니다. 서버를 먼저 띄운 뒤
 `.env`에 주소를 넣고 개발 서버를 다시 시작하면, 화면 코드를 건드리지 않고 실서버로 전환됩니다.
 
 ```bash
-# 1) 서버 (../attendance-app-server — Supabase 키 설정과 시드는 서버 README 참고)
+# 1) 서버 (../onwork-server — Supabase 키 설정과 시드는 서버 README 참고)
 npm run dev
 
 # 2) 앱
