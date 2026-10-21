@@ -1,7 +1,11 @@
-import { ApiError, USE_MOCK_API, isOffline, request, setAuthToken } from '@/api/client';
+import * as Crypto from 'expo-crypto';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+
+import { ApiError, USE_MOCK_API, apiUrl, isOffline, request, setAuthToken } from '@/api/client';
 import { MOCK_EMPLOYEES } from '@/api/mock/employees';
 import { seedLeavesIfEmpty, seedRecordsIfEmpty } from '@/api/mock/seed';
-import type { Employee, Session } from '@/api/types';
+import type { Employee, OAuthResult, Session, SocialProvider } from '@/api/types';
 import { localStore } from '@/storage/local-store';
 
 export type LoginInput = {
@@ -9,13 +13,30 @@ export type LoginInput = {
   companyName: string;
   employeeNo: string;
   password: string;
+  /** 소셜 로그인에서 받은 아직 연결 안 된 계정. 실으면 로그인하면서 연결된다. */
+  socialToken?: string;
 };
 
-export type SignupInput = LoginInput & {
+export type SignupInput = Omit<LoginInput, 'password'> & {
   name: string;
   department: string;
   position: string;
+  /** socialToken 으로 가입하면 비워도 된다. */
+  password?: string;
 };
+
+export const SOCIAL_LABEL: Record<SocialProvider, string> = {
+  naver: '네이버',
+  kakao: '카카오',
+  google: '구글',
+};
+
+/** 사용자가 창을 닫았으면 cancelled. 화면은 아무것도 띄우지 않는다. */
+export type SocialLoginOutcome = OAuthResult | { status: 'cancelled' };
+
+/** 바이트를 base64url 로. 서버의 challenge 계산과 맞춘다. */
+const toBase64Url = (base64: string) =>
+  base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
 async function startSession(session: Session) {
   setAuthToken(session.token);
@@ -37,12 +58,12 @@ export const authApi = {
   },
 
   /** 회사명 + 사번 + 비밀번호 로그인 */
-  async login({ companyName, employeeNo, password }: LoginInput): Promise<Session> {
+  async login({ companyName, employeeNo, password, socialToken }: LoginInput): Promise<Session> {
     if (!USE_MOCK_API) {
       return startSession(
         await request<Session>('/auth/login', {
           method: 'POST',
-          body: { companyName, employeeNo, password },
+          body: { companyName, employeeNo, password, socialToken },
         }),
       );
     }
@@ -61,6 +82,47 @@ export const authApi = {
     await seedLeavesIfEmpty();
 
     return session;
+  },
+
+  /** 서버에 키가 설정된 소셜 로그인 제공자. 목 모드에서는 없다. */
+  async socialProviders(): Promise<SocialProvider[]> {
+    if (USE_MOCK_API) return [];
+    return request<SocialProvider[]>('/auth/oauth/providers');
+  },
+
+  /**
+   * 소셜 로그인. 서버가 제공자와 코드를 주고받고, 앱은 브라우저 창에서 돌아온 ticket 만 받는다.
+   * ticket 은 여기서 만든 verifier 가 있어야 세션으로 바뀐다 (PKCE).
+   */
+  async socialLogin(provider: SocialProvider): Promise<SocialLoginOutcome> {
+    const verifier = Array.from(Crypto.getRandomBytes(32), (byte) =>
+      byte.toString(16).padStart(2, '0'),
+    ).join('');
+    const challenge = toBase64Url(
+      await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, {
+        encoding: Crypto.CryptoEncoding.BASE64,
+      }),
+    );
+    const redirect = Linking.createURL('oauth');
+
+    const result = await WebBrowser.openAuthSessionAsync(
+      apiUrl(`/auth/oauth/${provider}/start`, { redirect, challenge }),
+      redirect,
+    );
+    if (result.type !== 'success') return { status: 'cancelled' };
+
+    const params = Linking.parse(result.url).queryParams ?? {};
+    if (params.error === 'cancelled') return { status: 'cancelled' };
+    if (typeof params.ticket !== 'string') {
+      throw new ApiError(`${SOCIAL_LABEL[provider]} 로그인에 실패했습니다. 다시 시도해 주세요.`, 400);
+    }
+
+    const outcome = await request<OAuthResult>('/auth/oauth/exchange', {
+      method: 'POST',
+      body: { ticket: params.ticket, verifier },
+    });
+    if (outcome.status === 'signedIn') await startSession(outcome.session);
+    return outcome;
   },
 
   /** 앱 시작 시 저장된 세션 복구 */

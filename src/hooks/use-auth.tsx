@@ -1,8 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { authApi, type LoginInput, type SignupInput } from '@/api/auth';
+import { authApi, type LoginInput, type SignupInput, type SocialLoginOutcome } from '@/api/auth';
 import { setUnauthorizedHandler } from '@/api/client';
-import type { Session } from '@/api/types';
+import type { Session, SocialProvider } from '@/api/types';
 
 type AuthStatus = 'loading' | 'authenticated' | 'unauthenticated';
 
@@ -12,6 +12,8 @@ type AuthContextValue = {
   login: (input: LoginInput) => Promise<void>;
   /** 가입에 성공하면 바로 로그인된 상태가 된다. */
   signup: (input: SignupInput) => Promise<void>;
+  /** 연결된 직원이면 바로 로그인된다. 아니면 needsAccount 의 socialToken 으로 가입하거나 연결한다. */
+  socialLogin: (provider: SocialProvider) => Promise<SocialLoginOutcome>;
   logout: () => Promise<void>;
 };
 
@@ -62,6 +64,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('authenticated');
   }, []);
 
+  const socialLogin = useCallback(async (provider: SocialProvider) => {
+    const outcome = await authApi.socialLogin(provider);
+    if (outcome.status === 'signedIn') {
+      setSession(outcome.session);
+      setStatus('authenticated');
+    }
+    return outcome;
+  }, []);
+
   const logout = useCallback(async () => {
     await authApi.logout();
     setSession(null);
@@ -69,8 +80,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, session, login, signup, logout }),
-    [status, session, login, signup, logout],
+    () => ({ status, session, login, signup, socialLogin, logout }),
+    [status, session, login, signup, socialLogin, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

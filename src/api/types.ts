@@ -27,6 +27,18 @@ export type Session = {
   token: string;
 };
 
+export type SocialProvider = 'naver' | 'kakao' | 'google';
+
+/** 소셜 로그인 결과. 연결된 직원이 없으면 socialToken 을 실어 가입하거나 사번 로그인으로 연결한다. */
+export type OAuthResult =
+  | { status: 'signedIn'; session: Session }
+  | {
+      status: 'needsAccount';
+      socialToken: string;
+      /** 가입 화면에 미리 채울 값. 동의하지 않은 항목은 비어 있다. */
+      profile: { provider: SocialProvider; name: string; email: string | null };
+    };
+
 /** 근무지(사업장). 출퇴근 체크 가능 반경의 기준점 */
 export type Worksite = {
   id: string;

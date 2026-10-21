@@ -65,7 +65,7 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = () => {
-    Alert.alert('로그아웃할까요?', '다시 들어오려면 사번과 비밀번호가 필요합니다.', [
+    Alert.alert('로그아웃할까요?', '다시 들어오려면 로그인해야 합니다.', [
       { text: '취소', style: 'cancel' },
       { text: '로그아웃', style: 'destructive', onPress: () => logout() },
     ]);

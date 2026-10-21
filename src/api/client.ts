@@ -46,13 +46,18 @@ type RequestOptions = {
   query?: Record<string, string | number | undefined>;
 };
 
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const { method = 'GET', body, query } = options;
-
+/** 서버 주소. 브라우저로 직접 여는 주소(소셜 로그인)도 이걸로 만든다. */
+export function apiUrl(path: string, query?: RequestOptions['query']) {
   const url = new URL(path.replace(/^\//, ''), `${API_BASE_URL.replace(/\/$/, '')}/`);
   Object.entries(query ?? {}).forEach(([key, value]) => {
     if (value !== undefined) url.searchParams.set(key, String(value));
   });
+  return url.toString();
+}
+
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = 'GET', body, query } = options;
+  const url = apiUrl(path, query);
 
   // 요청을 보낸 시점의 토큰. 응답을 기다리는 사이 다시 로그인했다면 그 세션을 건드리지 않는다.
   const sentToken = authToken;
@@ -60,7 +65,7 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetch(url.toString(), {
+    const response = await fetch(url, {
       method,
       signal: controller.signal,
       headers: {

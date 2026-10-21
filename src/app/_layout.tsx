@@ -84,6 +84,8 @@ function RootNavigator({ fontsReady }: { fontsReady: boolean }) {
         <Stack.Screen name="login" />
         <Stack.Screen name="signup" />
       </Stack.Protected>
+      {/* 소셜 로그인 브라우저가 돌아오는 주소. 열리자마자 닫힌다. */}
+      <Stack.Screen name="oauth" options={{ animation: 'none' }} />
     </Stack>
   );
 }
