@@ -1,0 +1,11 @@
+<!--
+  오늘근무 마크. 반경을 뜻하는 고리와, 그 경계 맨 위에 올라선 점 하나.
+  점은 "지금 여기 도착했다"는 출근의 순간이고, 고리 전체는 "on" 의 o 다.
+  1024 격자 기준, 흰색. 수정 후 ./scripts/render-brand.sh 로 PNG 를 다시 만든다.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <g transform="translate(0 16)" fill="none" stroke="#FFFFFF" stroke-width="96" stroke-linecap="round">
+    <path d="M668.6 279.9 A280 280 0 1 1 355.4 279.9"/>
+    <circle cx="512" cy="232" r="80" fill="#FFFFFF" stroke="none"/>
+  </g>
+</svg>

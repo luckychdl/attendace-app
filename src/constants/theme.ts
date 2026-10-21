@@ -5,7 +5,8 @@
  * 그래서 바탕은 흰색으로 비우고, 면은 그 위에 얹힌 물리적인 조각처럼
  * 아주 옅은 그림자로 띄운다. 괘선과 테두리는 쓰지 않는다.
  *
- * 강조는 전기 인디고 한 색과 그 짝(accentTo)으로만 준다. 둘을 이어 쓰면 그라데이션이 된다.
+ * 색은 흰색과 검은색, 그 사이의 무채색 회색만 쓴다. 강조는 라이트에서 검정, 다크에서 흰색이다.
+ * accentTo 는 그라데이션 자리를 위해 남겨 두었지만 accent 와 같은 값이라 단색으로 보인다.
  *
  * 근태 상태색(good/warn/muted)은 라이트·다크를 각각 따로 고른 값이다.
  * 뒤집어 쓰지 말 것 — 명도 대역과 색각 분리 검사를 모드별로 통과한 조합이다.
@@ -20,42 +21,42 @@ export const Colors = {
     canvas: '#FFFFFF',
     surface: '#FFFFFF',
     /** 눌러 들어간 면. 세그먼트 바탕과 눈금 트랙이 여기에 앉는다. */
-    sunk: '#E4E7F0',
-    ink: '#15171F',
-    inkMuted: '#6B7080',
-    hairline: '#E0E3ED',
-    accent: '#3B30E8',
-    /** accent 의 짝. 둘을 이어 그라데이션으로 쓴다. */
-    accentTo: '#6E4BFF',
-    accentSoft: '#E7E5FF',
+    sunk: '#EDEDED',
+    ink: '#111111',
+    inkMuted: '#6B6B6B',
+    hairline: '#E5E5E5',
+    accent: '#111111',
+    /** accent 의 짝. 그라데이션 자리에 쓰지만 지금은 같은 색이라 단색으로 칠해진다. */
+    accentTo: '#111111',
+    accentSoft: '#EFEFEF',
     accentOn: '#FFFFFF',
     good: '#007F67',
     goodSoft: '#D6F2EA',
     warn: '#A85B00',
     warnSoft: '#FCEBD4',
-    muted: '#878C9C',
-    mutedSoft: '#E4E7F0',
+    muted: '#8A8A8A',
+    mutedSoft: '#EDEDED',
     /** 근무 구간 막대가 놓이는 예정 근무시간 트랙 */
-    track: '#C3C8D8',
+    track: '#C9C9C9',
   },
   dark: {
-    canvas: '#0A0B10',
-    surface: '#15171F',
-    sunk: '#1D202A',
-    ink: '#F2F3F8',
-    inkMuted: '#8A90A3',
-    hairline: '#262A36',
-    accent: '#8478FF',
-    accentTo: '#5C8CFF',
-    accentSoft: '#1E1B3A',
-    accentOn: '#0A0B10',
+    canvas: '#0A0A0A',
+    surface: '#161616',
+    sunk: '#1F1F1F',
+    ink: '#F2F2F2',
+    inkMuted: '#8F8F8F',
+    hairline: '#2A2A2A',
+    accent: '#F2F2F2',
+    accentTo: '#F2F2F2',
+    accentSoft: '#222222',
+    accentOn: '#0A0A0A',
     good: '#2BB88A',
     goodSoft: '#0C2620',
     warn: '#D29128',
     warnSoft: '#2B2110',
-    muted: '#777E91',
-    mutedSoft: '#1D202A',
-    track: '#343A4A',
+    muted: '#7A7A7A',
+    mutedSoft: '#1F1F1F',
+    track: '#3A3A3A',
   },
 } as const;
 
@@ -98,13 +99,13 @@ export const Radius = {
 export const Curve = 'continuous' as const satisfies ViewStyle['borderCurve'];
 
 /**
- * 면을 바탕에서 띄우는 그림자. 검정이 아니라 남청색으로 드리워 바탕의 청회색과 섞인다.
+ * 면을 바탕에서 띄우는 그림자. 무채색 바탕에 맞춰 검정으로 드리운다.
  * 다크 모드에서는 보이지 않지만 안드로이드 elevation 은 그대로 작동한다.
  */
 export const Elevation = {
   /** 목록 안의 카드 */
   low: {
-    shadowColor: '#171B3D',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
@@ -112,7 +113,7 @@ export const Elevation = {
   },
   /** 화면의 주인공 카드 */
   mid: {
-    shadowColor: '#171B3D',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.09,
     shadowRadius: 18,
@@ -120,7 +121,7 @@ export const Elevation = {
   },
   /** 바탕 위를 떠다니는 것 — 탭 바, 주요 버튼 */
   high: {
-    shadowColor: '#171B3D',
+    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 12 },
     shadowOpacity: 0.14,
     shadowRadius: 28,
@@ -128,12 +129,12 @@ export const Elevation = {
   },
 } as const satisfies Record<string, ViewStyle>;
 
-/** 강조색 면이 바탕에 번지는 빛. 누를 수 있다는 걸 색으로 알린다. */
+/** 강조색 면 아래에 드리우는 그림자. 누를 수 있다는 걸 알린다. 검정 면이라 색 번짐 대신 옅게 띄운다. */
 export function accentGlow(color: string): ViewStyle {
   return {
     shadowColor: color,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.18,
     shadowRadius: 20,
     elevation: 8,
   };

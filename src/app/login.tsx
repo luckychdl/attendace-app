@@ -1,4 +1,3 @@
-import Ionicons from '@expo/vector-icons/Ionicons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -9,6 +8,7 @@ import { authApi, SOCIAL_LABEL } from '@/api/auth';
 import { USE_MOCK_API } from '@/api/client';
 import type { SocialProvider } from '@/api/types';
 import { AppButton } from '@/components/app-button';
+import { BrandMark } from '@/components/brand-mark';
 import { SocialButtons } from '@/components/social-buttons';
 import { TextField } from '@/components/text-field';
 import { ThemedText } from '@/components/themed-text';
@@ -125,7 +125,7 @@ export default function LoginScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
                 style={[styles.mark, accentGlow(theme.accent)]}>
-                <Ionicons name="checkmark-sharp" size={34} color={theme.accentOn} />
+                <BrandMark size={56} color={theme.accentOn} />
               </LinearGradient>
               <ThemedText type="title">오늘근무</ThemedText>
               <ThemedText type="body" themeColor="inkMuted">
